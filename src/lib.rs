@@ -1,15 +1,14 @@
+mod movement;
 mod palette;
 
-use bevy::{prelude::*, utils::HashSet};
+use bevy::prelude::*;
+use movement::{Board, MovementPlugin, Position};
 
 pub struct AppPlugin;
 
 impl Plugin for AppPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<Board>()
-            .add_startup_system(setup)
-            .add_system(movement)
-            .add_system(board_to_world);
+        app.add_plugin(MovementPlugin).add_startup_system(setup);
     }
 }
 
@@ -73,45 +72,5 @@ fn setup(
             });
             board.tiles.insert(IVec2::new(j, i));
         }
-    }
-}
-
-#[derive(Default)]
-struct Board {
-    pub tiles: HashSet<IVec2>,
-}
-
-#[derive(Component)]
-struct Position {
-    pub vec: IVec2,
-}
-
-impl Position {
-    pub fn from_xy(x: i32, y: i32) -> Self {
-        Self {
-            vec: IVec2::new(x, y),
-        }
-    }
-}
-
-fn movement(mut query: Query<&mut Position>, board: Res<Board>, input: Res<Input<KeyCode>>) {
-    let mut direction = IVec2::new(
-        input.just_pressed(KeyCode::Right) as i32 - input.just_pressed(KeyCode::Left) as i32,
-        input.just_pressed(KeyCode::Up) as i32 - input.just_pressed(KeyCode::Down) as i32,
-    );
-    if direction.x != 0 {
-        direction.y = 0;
-    }
-    let mut position = query.single_mut();
-    let new_position = position.vec + direction;
-    if board.tiles.contains(&new_position) {
-        position.vec = new_position;
-    }
-}
-
-fn board_to_world(mut query: Query<(&mut Transform, &Position)>) {
-    for (mut transform, position) in &mut query {
-        transform.translation.x = position.vec.x as f32;
-        transform.translation.z = -position.vec.y as f32;
     }
 }
