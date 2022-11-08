@@ -75,7 +75,7 @@ fn setup(
         )))
         .insert_bundle(VisibilityBundle::default())
         .insert(Position::from_xy(0, 0))
-        .insert(Laser::new(Axis::Vertical, ray, 2.0, 0.2))
+        .insert(Laser::new(Axis::Vertical, ray, 2.0, 0.5, 0.2))
         .push_children(&[top, bottom, ray]);
 }
 
@@ -89,21 +89,33 @@ struct Laser {
     pub axis: Axis,
     pub ray: Entity,
     pub timer: Timer,
-    duration: Duration,
+    charge_duration: Duration,
+    attack_duration: Duration,
 }
 
 impl Laser {
-    pub fn new(axis: Axis, ray: Entity, interval: f32, duration: f32) -> Self {
+    pub fn new(
+        axis: Axis,
+        ray: Entity,
+        interval: f32,
+        charge_duration: f32,
+        attack_duration: f32,
+    ) -> Self {
         Self {
             axis,
             ray,
             timer: Timer::from_seconds(interval, true),
-            duration: Duration::from_secs_f32(duration),
+            charge_duration: Duration::from_secs_f32(charge_duration),
+            attack_duration: Duration::from_secs_f32(attack_duration),
         }
     }
 
+    pub fn moving(&self) -> bool {
+        (self.timer.duration() - self.timer.elapsed()) > self.charge_duration + self.attack_duration
+    }
+
     pub fn shooting(&self) -> bool {
-        (self.timer.duration() - self.timer.elapsed()) < self.duration
+        (self.timer.duration() - self.timer.elapsed()) <= self.attack_duration
     }
 }
 
@@ -117,8 +129,10 @@ fn movement(
 ) {
     let player_position = player_query.single().vec;
     for (mut laser_position, laser) in &mut laser_query {
-        match laser.axis {
-            Axis::Vertical => laser_position.vec.x = player_position.x,
+        if laser.moving() {
+            match laser.axis {
+                Axis::Vertical => laser_position.vec.x = player_position.x,
+            }
         }
     }
 }
