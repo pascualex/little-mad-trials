@@ -4,6 +4,7 @@ mod palette;
 mod player;
 
 use bevy::prelude::*;
+use iyes_loopless::prelude::*;
 
 use crate::{board::BoardPlugin, laser::LaserPlugin, player::PlayerPlugin};
 
@@ -11,11 +12,18 @@ pub struct AppPlugin;
 
 impl Plugin for AppPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(BoardPlugin)
+        app.add_loopless_state(AppState::Alive)
+            .add_plugin(BoardPlugin)
             .add_plugin(PlayerPlugin)
             .add_plugin(LaserPlugin)
             .add_startup_system(setup);
     }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+enum AppState {
+    Alive,
+    Dead,
 }
 
 fn setup(mut commands: Commands) {

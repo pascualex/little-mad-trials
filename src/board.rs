@@ -6,7 +6,9 @@ pub struct BoardPlugin;
 
 impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup).add_system(to_world);
+        app.init_resource::<Board>()
+            .add_startup_system(setup)
+            .add_system(to_world);
     }
 }
 

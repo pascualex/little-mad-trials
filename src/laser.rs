@@ -1,16 +1,21 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
+use iyes_loopless::prelude::*;
 
-use crate::{board::Position, palette, player::Player};
+use crate::{board::Position, palette, player::Player, AppState};
 
 pub struct LaserPlugin;
 
 impl Plugin for LaserPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup)
-            .add_system(movement)
-            .add_system(attack);
+        app.add_startup_system(setup).add_system_set(
+            ConditionSet::new()
+                .run_in_state(AppState::Alive)
+                .with_system(movement)
+                .with_system(attack)
+                .into(),
+        );
     }
 }
 
@@ -112,13 +117,19 @@ fn movement(
 }
 
 fn attack(
-    mut laser_query: Query<&mut Laser, Without<Player>>,
+    mut laser_query: Query<(&Position, &mut Laser), Without<Player>>,
+    mut player_query: Query<&Position, With<Player>>,
     mut visibility_query: Query<&mut Visibility>,
     time: Res<Time>,
+    mut commands: Commands,
 ) {
-    for mut laser in &mut laser_query {
+    let player_position = player_query.single_mut();
+    for (laser_position, mut laser) in &mut laser_query {
         laser.timer.tick(time.delta());
         let mut visibility = visibility_query.get_mut(laser.ray).unwrap();
         visibility.is_visible = laser.shooting();
+        if laser.shooting() && laser_position.vec == player_position.vec {
+            commands.insert_resource(NextState(AppState::Dead));
+        }
     }
 }

@@ -1,17 +1,21 @@
 use bevy::prelude::*;
+use iyes_loopless::prelude::*;
 
 use crate::{
     board::{Board, Position},
-    palette,
+    palette, AppState,
 };
 
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<Board>()
-            .add_startup_system(setup)
-            .add_system(movement);
+        app.add_startup_system(setup).add_system_set(
+            ConditionSet::new()
+                .run_in_state(AppState::Alive)
+                .with_system(movement)
+                .into(),
+        );
     }
 }
 
