@@ -20,6 +20,9 @@ pub struct Position {
     pub vec: IVec2,
 }
 
+#[derive(Component)]
+pub struct Player;
+
 impl Position {
     pub fn from_xy(x: i32, y: i32) -> Self {
         Self {
@@ -28,7 +31,11 @@ impl Position {
     }
 }
 
-fn movement(mut query: Query<&mut Position>, board: Res<Board>, input: Res<Input<KeyCode>>) {
+fn movement(
+    mut query: Query<&mut Position, With<Player>>,
+    board: Res<Board>,
+    input: Res<Input<KeyCode>>,
+) {
     let mut direction = IVec2::new(
         input.just_pressed(KeyCode::Right) as i32 - input.just_pressed(KeyCode::Left) as i32,
         input.just_pressed(KeyCode::Up) as i32 - input.just_pressed(KeyCode::Down) as i32,

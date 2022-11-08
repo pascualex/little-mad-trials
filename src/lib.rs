@@ -2,13 +2,15 @@ mod movement;
 mod palette;
 
 use bevy::prelude::*;
-use movement::{Board, MovementPlugin, Position};
+use movement::{Board, MovementPlugin, Player, Position};
 
 pub struct AppPlugin;
 
 impl Plugin for AppPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(MovementPlugin).add_startup_system(setup);
+        app.add_plugin(MovementPlugin)
+            .add_startup_system(setup)
+            .add_system(turret_movement);
     }
 }
 
@@ -55,7 +57,38 @@ fn setup(
             transform: Transform::from_xyz(0.0, 0.4, 0.0),
             ..default()
         })
-        .insert(Position::from_xy(0, 0));
+        .insert(Position::from_xy(0, 0))
+        .insert(Player);
+    commands
+        .spawn_bundle(MaterialMeshBundle {
+            mesh: meshes.add(Mesh::from(shape::Box::new(0.3, 0.3, 0.6))),
+            material: materials.add(StandardMaterial {
+                base_color: palette::DARK_RED,
+                metallic: 0.1,
+                perceptual_roughness: 0.7,
+                reflectance: 0.3,
+                ..default()
+            }),
+            transform: Transform::from_xyz(0.0, 0.4, 0.0),
+            ..default()
+        })
+        .insert(Position::from_xy(0, 2))
+        .insert(Turret::new(Axis::Horizontal));
+    commands
+        .spawn_bundle(MaterialMeshBundle {
+            mesh: meshes.add(Mesh::from(shape::Box::new(0.3, 0.3, 0.6))),
+            material: materials.add(StandardMaterial {
+                base_color: palette::DARK_RED,
+                metallic: 0.1,
+                perceptual_roughness: 0.7,
+                reflectance: 0.3,
+                ..default()
+            }),
+            transform: Transform::from_xyz(0.0, 0.4, 0.0),
+            ..default()
+        })
+        .insert(Position::from_xy(0, -2))
+        .insert(Turret::new(Axis::Horizontal));
     for i in -1..=1 {
         for j in -1..=1 {
             commands.spawn_bundle(MaterialMeshBundle {
@@ -71,6 +104,33 @@ fn setup(
                 ..default()
             });
             board.tiles.insert(IVec2::new(j, i));
+        }
+    }
+}
+
+#[derive(Component)]
+struct Turret {
+    pub movement: Axis,
+}
+
+impl Turret {
+    pub fn new(movement: Axis) -> Self {
+        Self { movement }
+    }
+}
+
+enum Axis {
+    Horizontal,
+}
+
+fn turret_movement(
+    mut turret_query: Query<(&mut Position, &Turret), Without<Player>>,
+    player_query: Query<&Position, With<Player>>,
+) {
+    let player_position = player_query.single().vec;
+    for (mut turret_position, turret) in &mut turret_query {
+        match turret.movement {
+            Axis::Horizontal => turret_position.vec.x = player_position.x,
         }
     }
 }
