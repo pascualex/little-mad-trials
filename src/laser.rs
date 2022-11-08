@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
 
 use crate::{board::Position, palette, player::Player};
@@ -6,7 +8,9 @@ pub struct LaserPlugin;
 
 impl Plugin for LaserPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup).add_system(laser_movement);
+        app.add_startup_system(setup)
+            .add_system(movement)
+            .add_system(attack);
     }
 }
 
@@ -15,7 +19,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    commands
+    let top = commands
         .spawn_bundle(MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Box::new(0.3, 0.3, 0.6))),
             material: materials.add(StandardMaterial {
@@ -25,12 +29,11 @@ fn setup(
                 reflectance: 0.3,
                 ..default()
             }),
-            transform: Transform::from_xyz(0.0, 0.4, 0.0),
+            transform: Transform::from_xyz(0.0, 0.0, 2.0),
             ..default()
         })
-        .insert(Position::from_xy(0, 2))
-        .insert(Laser::new(Axis::Horizontal));
-    commands
+        .id();
+    let bottom = commands
         .spawn_bundle(MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Box::new(0.3, 0.3, 0.6))),
             material: materials.add(StandardMaterial {
@@ -40,36 +43,82 @@ fn setup(
                 reflectance: 0.3,
                 ..default()
             }),
-            transform: Transform::from_xyz(0.0, 0.4, 0.0),
+            transform: Transform::from_xyz(0.0, 0.0, -2.0),
             ..default()
         })
-        .insert(Position::from_xy(0, -2))
-        .insert(Laser::new(Axis::Horizontal));
+        .id();
+    let ray = commands
+        .spawn_bundle(MaterialMeshBundle {
+            mesh: meshes.add(Mesh::from(shape::Box::new(0.1, 0.1, 4.0))),
+            material: materials.add(StandardMaterial {
+                base_color: palette::DARK_RED,
+                metallic: 0.1,
+                perceptual_roughness: 0.7,
+                reflectance: 0.3,
+                ..default()
+            }),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+            visibility: Visibility { is_visible: false },
+            ..default()
+        })
+        .id();
+    commands
+        .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+            0.0, 0.5, 0.0,
+        )))
+        .insert_bundle(VisibilityBundle::default())
+        .insert(Position::from_xy(0, 0))
+        .insert(Laser::new(Axis::Vertical, ray, 2.0, 0.2))
+        .push_children(&[top, bottom, ray]);
 }
 
 #[derive(Component)]
 struct Laser {
-    pub movement: Axis,
+    pub axis: Axis,
+    pub ray: Entity,
+    pub timer: Timer,
+    duration: Duration,
 }
 
 impl Laser {
-    pub fn new(movement: Axis) -> Self {
-        Self { movement }
+    pub fn new(axis: Axis, ray: Entity, interval: f32, duration: f32) -> Self {
+        Self {
+            axis,
+            ray,
+            timer: Timer::from_seconds(interval, true),
+            duration: Duration::from_secs_f32(duration),
+        }
+    }
+
+    pub fn shooting(&self) -> bool {
+        (self.timer.duration() - self.timer.elapsed()) < self.duration
     }
 }
 
 enum Axis {
-    Horizontal,
+    Vertical,
 }
 
-fn laser_movement(
+fn movement(
     mut laser_query: Query<(&mut Position, &Laser), Without<Player>>,
     player_query: Query<&Position, With<Player>>,
 ) {
     let player_position = player_query.single().vec;
     for (mut laser_position, laser) in &mut laser_query {
-        match laser.movement {
-            Axis::Horizontal => laser_position.vec.x = player_position.x,
+        match laser.axis {
+            Axis::Vertical => laser_position.vec.x = player_position.x,
         }
+    }
+}
+
+fn attack(
+    mut laser_query: Query<&mut Laser, Without<Player>>,
+    mut visibility_query: Query<&mut Visibility>,
+    time: Res<Time>,
+) {
+    for mut laser in &mut laser_query {
+        laser.timer.tick(time.delta());
+        let mut visibility = visibility_query.get_mut(laser.ray).unwrap();
+        visibility.is_visible = laser.shooting();
     }
 }
