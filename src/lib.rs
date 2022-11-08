@@ -16,7 +16,13 @@ impl Plugin for AppPlugin {
             .add_plugin(BoardPlugin)
             .add_plugin(PlayerPlugin)
             .add_plugin(LaserPlugin)
-            .add_startup_system(setup);
+            .add_startup_system(setup)
+            .add_system_set(
+                ConditionSet::new()
+                    .run_in_state(AppState::Dead)
+                    .with_system(restart)
+                    .into(),
+            );
     }
 }
 
@@ -51,4 +57,10 @@ fn setup(mut commands: Commands) {
         },
         ..default()
     });
+}
+
+fn restart(input: Res<Input<KeyCode>>, mut commands: Commands) {
+    if input.pressed(KeyCode::Space) {
+        commands.insert_resource(NextState(AppState::Alive));
+    }
 }

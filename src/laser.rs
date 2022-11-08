@@ -9,13 +9,15 @@ pub struct LaserPlugin;
 
 impl Plugin for LaserPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup).add_system_set(
-            ConditionSet::new()
-                .run_in_state(AppState::Alive)
-                .with_system(movement)
-                .with_system(attack)
-                .into(),
-        );
+        app.add_enter_system(AppState::Alive, setup)
+            .add_exit_system(AppState::Dead, teardown)
+            .add_system_set(
+                ConditionSet::new()
+                    .run_in_state(AppState::Alive)
+                    .with_system(movement)
+                    .with_system(attack)
+                    .into(),
+            );
     }
 }
 
@@ -77,6 +79,11 @@ fn setup(
         .push_children(&[top, bottom, ray]);
 }
 
+fn teardown(query: Query<Entity, With<Laser>>, mut commands: Commands) {
+    let entity = query.single();
+    commands.entity(entity).despawn_recursive();
+}
+
 #[derive(Component)]
 struct Laser {
     pub axis: Axis,
@@ -128,7 +135,10 @@ fn attack(
         laser.timer.tick(time.delta());
         let mut visibility = visibility_query.get_mut(laser.ray).unwrap();
         visibility.is_visible = laser.shooting();
-        if laser.shooting() && laser_position.vec == player_position.vec {
+        let aligned = match laser.axis {
+            Axis::Vertical => laser_position.vec.x == player_position.vec.x,
+        };
+        if laser.shooting() && aligned {
             commands.insert_resource(NextState(AppState::Dead));
         }
     }

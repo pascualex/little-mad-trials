@@ -10,12 +10,14 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup).add_system_set(
-            ConditionSet::new()
-                .run_in_state(AppState::Alive)
-                .with_system(movement)
-                .into(),
-        );
+        app.add_enter_system(AppState::Alive, setup)
+            .add_system_set(
+                ConditionSet::new()
+                    .run_in_state(AppState::Alive)
+                    .with_system(movement)
+                    .into(),
+            )
+            .add_exit_system(AppState::Dead, teardown);
     }
 }
 
@@ -39,6 +41,11 @@ fn setup(
         })
         .insert(Position::from_xy(0, 0))
         .insert(Player);
+}
+
+fn teardown(query: Query<Entity, With<Player>>, mut commands: Commands) {
+    let entity = query.single();
+    commands.entity(entity).despawn_recursive();
 }
 
 #[derive(Component)]
