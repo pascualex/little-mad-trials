@@ -10,14 +10,14 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_enter_system(AppState::Alive, setup)
+        app.add_enter_system(AppState::Game, setup)
             .add_system_set(
                 ConditionSet::new()
-                    .run_in_state(AppState::Alive)
+                    .run_in_state(AppState::Game)
                     .with_system(movement)
                     .into(),
             )
-            .add_exit_system(AppState::Dead, teardown);
+            .add_exit_system(AppState::Defeat, teardown);
     }
 }
 

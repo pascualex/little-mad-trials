@@ -1,8 +1,10 @@
+mod background;
 mod board;
 mod laser;
 mod palette;
 mod player;
 
+use background::BackgroundPlugin;
 use bevy::prelude::*;
 use iyes_loopless::prelude::*;
 
@@ -12,14 +14,15 @@ pub struct AppPlugin;
 
 impl Plugin for AppPlugin {
     fn build(&self, app: &mut App) {
-        app.add_loopless_state(AppState::Alive)
+        app.add_loopless_state(AppState::Game)
+            .add_plugin(BackgroundPlugin)
             .add_plugin(BoardPlugin)
             .add_plugin(PlayerPlugin)
             .add_plugin(LaserPlugin)
             .add_startup_system(setup)
             .add_system_set(
                 ConditionSet::new()
-                    .run_in_state(AppState::Dead)
+                    .run_not_in_state(AppState::Game)
                     .with_system(restart)
                     .into(),
             );
@@ -28,8 +31,9 @@ impl Plugin for AppPlugin {
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 enum AppState {
-    Alive,
-    Dead,
+    Game,
+    Defeat,
+    Victory,
 }
 
 fn setup(mut commands: Commands) {
@@ -61,6 +65,6 @@ fn setup(mut commands: Commands) {
 
 fn restart(input: Res<Input<KeyCode>>, mut commands: Commands) {
     if input.pressed(KeyCode::Space) {
-        commands.insert_resource(NextState(AppState::Alive));
+        commands.insert_resource(NextState(AppState::Game));
     }
 }
