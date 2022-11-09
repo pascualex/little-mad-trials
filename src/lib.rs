@@ -8,7 +8,7 @@ use background::BackgroundPlugin;
 use bevy::prelude::*;
 use iyes_loopless::prelude::*;
 
-use crate::{board::BoardPlugin, laser::LaserPlugin, player::PlayerPlugin};
+use self::{board::BoardPlugin, laser::LaserPlugin, player::PlayerPlugin};
 
 pub struct AppPlugin;
 
