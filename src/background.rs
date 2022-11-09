@@ -7,13 +7,15 @@ pub struct BackgroundPlugin;
 
 impl Plugin for BackgroundPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(Countdown::new(20.1))
+        app.insert_resource(Countdown::new(20.8))
             .add_startup_system(setup)
             .add_enter_system(AppState::Game, enter_game)
             .add_system_set(
                 ConditionSet::new()
                     .run_in_state(AppState::Game)
                     .with_system(countdown)
+                    // TODO: remove
+                    .with_system(instant_victory)
                     .into(),
             )
             .add_enter_system(AppState::Defeat, enter_defeat)
@@ -83,7 +85,7 @@ fn enter_victory(mut query: Query<&mut Text, With<CountdownText>>) {
     text.sections[0].value = "Victory!".to_string();
 }
 
-struct Countdown {
+pub struct Countdown {
     pub timer: Timer,
 }
 
@@ -109,6 +111,12 @@ fn countdown(
     let remaining = countdown.timer.duration() - countdown.timer.elapsed();
     text.sections[0].value = format!("{:.0}", remaining.as_secs_f32());
     if countdown.timer.finished() {
+        commands.insert_resource(NextState(AppState::Victory));
+    }
+}
+
+fn instant_victory(input: Res<Input<KeyCode>>, mut commands: Commands) {
+    if input.pressed(KeyCode::V) {
         commands.insert_resource(NextState(AppState::Victory));
     }
 }

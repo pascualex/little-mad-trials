@@ -23,12 +23,6 @@ impl Plugin for AppPlugin {
             .add_enter_system(AppState::Setup, enter_setup)
             .add_system_set(
                 ConditionSet::new()
-                    .run_in_state(AppState::Game)
-                    .with_system(instant_victory)
-                    .into(),
-            )
-            .add_system_set(
-                ConditionSet::new()
                     .run_in_state(AppState::Defeat)
                     .with_system(restart)
                     .into(),
@@ -85,12 +79,6 @@ fn enter_setup(mut commands: Commands) {
 
 fn enter_teardown(mut commands: Commands) {
     commands.insert_resource(NextState(AppState::Setup));
-}
-
-fn instant_victory(input: Res<Input<KeyCode>>, mut commands: Commands) {
-    if input.pressed(KeyCode::V) {
-        commands.insert_resource(NextState(AppState::Victory));
-    }
 }
 
 fn restart(input: Res<Input<KeyCode>>, mut commands: Commands) {
