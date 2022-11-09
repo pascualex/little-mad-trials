@@ -19,8 +19,8 @@ impl Plugin for LaserPlugin {
             .add_system_set(
                 ConditionSet::new()
                     .run_in_state(AppState::Game)
+                    .with_system(mode)
                     .with_system(movement)
-                    .with_system(charge)
                     .with_system(attack)
                     .into(),
             );
@@ -37,15 +37,55 @@ fn enter_setup(
         IVec2::ZERO,
         Axis::Vertical,
         true,
+        vec![
+            Phase::new(Mode::Charging, 0.8),
+            Phase::new(Mode::Shooting, 1.0),
+            Phase::new(Mode::Ready, 1.8),
+            Phase::new(Mode::Charging, 2.3),
+            Phase::new(Mode::Shooting, 2.5),
+            Phase::new(Mode::Ready, 3.3),
+            Phase::new(Mode::Charging, 3.8),
+            Phase::new(Mode::Shooting, 4.0),
+            Phase::new(Mode::Ready, 5.0),
+            Phase::new(Mode::Charging, 5.5),
+            Phase::new(Mode::Shooting, 5.7),
+            Phase::new(Mode::Ready, 6.5),
+            Phase::new(Mode::Charging, 7.0),
+            Phase::new(Mode::Shooting, 7.2),
+            Phase::new(Mode::Ready, 8.0),
+            Phase::new(Mode::Charging, 8.5),
+            Phase::new(Mode::Shooting, 8.7),
+        ],
         &mut meshes,
         &mut materials,
     );
-    for i in -1..=1 {
+    laser(
+        &mut commands,
+        IVec2::new(0, 0),
+        Axis::Horizontal,
+        false,
+        vec![
+            Phase::new(Mode::Ready, 6.5),
+            Phase::new(Mode::Charging, 7.0),
+            Phase::new(Mode::Shooting, 7.2),
+        ],
+        &mut meshes,
+        &mut materials,
+    );
+    for i in [-1, 1] {
         laser(
             &mut commands,
             IVec2::new(0, i),
             Axis::Horizontal,
             false,
+            vec![
+                Phase::new(Mode::Ready, 5.0),
+                Phase::new(Mode::Charging, 5.5),
+                Phase::new(Mode::Shooting, 5.7),
+                Phase::new(Mode::Ready, 8.0),
+                Phase::new(Mode::Charging, 8.5),
+                Phase::new(Mode::Shooting, 8.7),
+            ],
             &mut meshes,
             &mut materials,
         );
@@ -57,6 +97,7 @@ fn laser(
     position: IVec2,
     axis: Axis,
     mobile: bool,
+    phases: Vec<Phase>,
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<StandardMaterial>,
 ) {
@@ -73,7 +114,7 @@ fn laser(
         ))
         .insert_bundle(VisibilityBundle::default())
         .insert(Position::new(position))
-        .insert(Laser::new(axis, mobile, 2.0, 0.5, 0.2))
+        .insert(Laser::new(axis, mobile, phases))
         .insert(Visuals::new(normal, charging, ray))
         .push_children(&[normal, charging, ray]);
 }
@@ -88,38 +129,25 @@ fn enter_teardown(query: Query<Entity, With<Laser>>, mut commands: Commands) {
 struct Laser {
     pub axis: Axis,
     pub mobile: bool,
-    pub timer: Timer,
-    charge_duration: Duration,
-    attack_duration: Duration,
+    pub phases: Vec<Phase>,
+    pub elapsed: Duration,
 }
 
 impl Laser {
-    pub fn new(
-        axis: Axis,
-        mobile: bool,
-        interval: f32,
-        charge_duration: f32,
-        attack_duration: f32,
-    ) -> Self {
+    pub fn new(axis: Axis, mobile: bool, phases: Vec<Phase>) -> Self {
         Self {
             axis,
             mobile,
-            timer: Timer::from_seconds(interval, true),
-            charge_duration: Duration::from_secs_f32(charge_duration),
-            attack_duration: Duration::from_secs_f32(attack_duration),
+            phases,
+            elapsed: Duration::ZERO,
         }
     }
 
-    pub fn charging(&self) -> bool {
-        self.remaining() <= self.charge_duration + self.attack_duration
-    }
-
-    pub fn shooting(&self) -> bool {
-        self.remaining() <= self.attack_duration
-    }
-
-    fn remaining(&self) -> Duration {
-        self.timer.duration() - self.timer.elapsed()
+    pub fn mode(&self) -> Mode {
+        match self.phases.first() {
+            Some(phase) => phase.mode,
+            None => Mode::Ready,
+        }
     }
 }
 
@@ -128,24 +156,51 @@ enum Axis {
     Vertical,
 }
 
+struct Phase {
+    pub mode: Mode,
+    pub duration: Duration,
+}
+
+impl Phase {
+    pub fn new(mode: Mode, seconds: f32) -> Self {
+        Self {
+            mode,
+            duration: Duration::from_secs_f32(seconds),
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+enum Mode {
+    Ready,
+    Charging,
+    Shooting,
+}
+
+fn mode(mut query: Query<&mut Laser>, time: Res<Time>) {
+    for mut laser in &mut query {
+        laser.elapsed += time.delta();
+        while let Some(phase) = laser.phases.first() {
+            if phase.duration >= laser.elapsed {
+                break;
+            }
+            laser.phases.remove(0);
+        }
+    }
+}
+
 fn movement(
     mut laser_query: Query<(&mut Position, &Laser), Without<Player>>,
     player_query: Query<&Position, With<Player>>,
 ) {
     let player_position = player_query.single().vec;
     for (mut laser_position, laser) in &mut laser_query {
-        if laser.mobile && !laser.charging() {
+        if laser.mobile && matches!(laser.mode(), Mode::Ready) {
             match laser.axis {
                 Axis::Horizontal => laser_position.vec.y = player_position.y,
                 Axis::Vertical => laser_position.vec.x = player_position.x,
             }
         }
-    }
-}
-
-fn charge(mut laser_query: Query<&mut Laser>, time: Res<Time>) {
-    for mut laser in &mut laser_query {
-        laser.timer.tick(time.delta());
     }
 }
 
@@ -160,7 +215,7 @@ fn attack(
             Axis::Horizontal => laser_position.vec.y == player_position.vec.y,
             Axis::Vertical => laser_position.vec.x == player_position.vec.x,
         };
-        if laser.shooting() && aligned {
+        if matches!(laser.mode(), Mode::Shooting) && aligned {
             commands.insert_resource(NextState(AppState::Defeat));
         }
     }

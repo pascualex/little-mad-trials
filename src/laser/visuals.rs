@@ -1,7 +1,11 @@
 use bevy::prelude::*;
 use iyes_loopless::prelude::*;
 
-use crate::{laser::Laser, palette, player::Player, AppState};
+use crate::{
+    laser::{Laser, Mode},
+    palette,
+    player::Player,
+};
 
 pub struct VisualsPlugin;
 
@@ -9,7 +13,6 @@ impl Plugin for VisualsPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(
             ConditionSet::new()
-                .run_in_state(AppState::Game)
                 .with_system(charge)
                 .with_system(attack)
                 .into(),
@@ -99,9 +102,9 @@ impl Visuals {
 fn charge(laser_query: Query<(&Laser, &Visuals)>, mut visibility_query: Query<&mut Visibility>) {
     for (laser, models) in &laser_query {
         let mut normal_visibility = visibility_query.get_mut(models.normal).unwrap();
-        normal_visibility.is_visible = !laser.charging();
+        normal_visibility.is_visible = !matches!(laser.mode(), Mode::Charging | Mode::Shooting);
         let mut charging_visibility = visibility_query.get_mut(models.charging).unwrap();
-        charging_visibility.is_visible = laser.charging();
+        charging_visibility.is_visible = matches!(laser.mode(), Mode::Charging | Mode::Shooting);
     }
 }
 
@@ -111,6 +114,6 @@ fn attack(
 ) {
     for (laser, visuals) in &laser_query {
         let mut visibility = visibility_query.get_mut(visuals.ray).unwrap();
-        visibility.is_visible = laser.shooting();
+        visibility.is_visible = matches!(laser.mode(), Mode::Shooting);
     }
 }
