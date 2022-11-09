@@ -48,6 +48,10 @@ pub struct Position {
 }
 
 impl Position {
+    pub fn new(vec: IVec2) -> Self {
+        Self { vec }
+    }
+
     pub fn from_xy(x: i32, y: i32) -> Self {
         Self {
             vec: IVec2::new(x, y),
