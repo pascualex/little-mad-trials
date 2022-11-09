@@ -9,8 +9,8 @@ pub struct LaserPlugin;
 
 impl Plugin for LaserPlugin {
     fn build(&self, app: &mut App) {
-        app.add_enter_system(AppState::Game, setup)
-            .add_exit_system(AppState::Defeat, teardown)
+        app.add_enter_system(AppState::Setup, enter_setup)
+            .add_enter_system(AppState::Teardown, enter_teardown)
             .add_system_set(
                 ConditionSet::new()
                     .run_in_state(AppState::Game)
@@ -21,7 +21,7 @@ impl Plugin for LaserPlugin {
     }
 }
 
-fn setup(
+fn enter_setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -79,7 +79,7 @@ fn setup(
         .push_children(&[top, bottom, ray]);
 }
 
-fn teardown(query: Query<Entity, With<Laser>>, mut commands: Commands) {
+fn enter_teardown(query: Query<Entity, With<Laser>>, mut commands: Commands) {
     let entity = query.single();
     commands.entity(entity).despawn_recursive();
 }

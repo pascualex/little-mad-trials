@@ -10,18 +10,18 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_enter_system(AppState::Game, setup)
+        app.add_enter_system(AppState::Setup, enter_setup)
             .add_system_set(
                 ConditionSet::new()
                     .run_in_state(AppState::Game)
                     .with_system(movement)
                     .into(),
             )
-            .add_exit_system(AppState::Defeat, teardown);
+            .add_enter_system(AppState::Teardown, enter_teardown);
     }
 }
 
-fn setup(
+fn enter_setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -43,7 +43,7 @@ fn setup(
         .insert(Player);
 }
 
-fn teardown(query: Query<Entity, With<Player>>, mut commands: Commands) {
+fn enter_teardown(query: Query<Entity, With<Player>>, mut commands: Commands) {
     let entity = query.single();
     commands.entity(entity).despawn_recursive();
 }

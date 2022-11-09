@@ -14,26 +14,42 @@ pub struct AppPlugin;
 
 impl Plugin for AppPlugin {
     fn build(&self, app: &mut App) {
-        app.add_loopless_state(AppState::Game)
+        app.add_loopless_state(AppState::Setup)
             .add_plugin(BackgroundPlugin)
             .add_plugin(BoardPlugin)
             .add_plugin(PlayerPlugin)
             .add_plugin(LaserPlugin)
             .add_startup_system(setup)
+            .add_enter_system(AppState::Setup, enter_setup)
             .add_system_set(
                 ConditionSet::new()
-                    .run_not_in_state(AppState::Game)
+                    .run_in_state(AppState::Game)
+                    .with_system(instant_victory)
+                    .into(),
+            )
+            .add_system_set(
+                ConditionSet::new()
+                    .run_in_state(AppState::Defeat)
                     .with_system(restart)
                     .into(),
-            );
+            )
+            .add_system_set(
+                ConditionSet::new()
+                    .run_in_state(AppState::Victory)
+                    .with_system(restart)
+                    .into(),
+            )
+            .add_enter_system(AppState::Teardown, enter_teardown);
     }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 enum AppState {
+    Setup,
     Game,
     Defeat,
     Victory,
+    Teardown,
 }
 
 fn setup(mut commands: Commands) {
@@ -63,8 +79,22 @@ fn setup(mut commands: Commands) {
     });
 }
 
+fn enter_setup(mut commands: Commands) {
+    commands.insert_resource(NextState(AppState::Game));
+}
+
+fn enter_teardown(mut commands: Commands) {
+    commands.insert_resource(NextState(AppState::Setup));
+}
+
+fn instant_victory(input: Res<Input<KeyCode>>, mut commands: Commands) {
+    if input.pressed(KeyCode::V) {
+        commands.insert_resource(NextState(AppState::Victory));
+    }
+}
+
 fn restart(input: Res<Input<KeyCode>>, mut commands: Commands) {
     if input.pressed(KeyCode::Space) {
-        commands.insert_resource(NextState(AppState::Game));
+        commands.insert_resource(NextState(AppState::Teardown));
     }
 }
