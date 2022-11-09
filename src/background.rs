@@ -7,7 +7,7 @@ pub struct BackgroundPlugin;
 
 impl Plugin for BackgroundPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(Countdown::new(20.0))
+        app.insert_resource(Countdown::new(20.1))
             .add_startup_system(setup)
             .add_enter_system(AppState::Game, enter_game)
             .add_system_set(
