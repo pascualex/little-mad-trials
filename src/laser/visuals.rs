@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use iyes_loopless::prelude::*;
 
 use crate::{
     laser::{Laser, Mode},
@@ -11,12 +10,8 @@ pub struct VisualsPlugin;
 
 impl Plugin for VisualsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(
-            ConditionSet::new()
-                .with_system(charge)
-                .with_system(attack)
-                .into(),
-        );
+        app.add_system(charge.after("charge"))
+            .add_system(attack.after("charge"));
     }
 }
 

@@ -21,18 +21,8 @@ impl Plugin for AppPlugin {
             .add_plugin(LaserPlugin)
             .add_startup_system(setup)
             .add_enter_system(AppState::Setup, enter_setup)
-            .add_system_set(
-                ConditionSet::new()
-                    .run_in_state(AppState::Defeat)
-                    .with_system(restart)
-                    .into(),
-            )
-            .add_system_set(
-                ConditionSet::new()
-                    .run_in_state(AppState::Victory)
-                    .with_system(restart)
-                    .into(),
-            )
+            .add_system(restart.run_in_state(AppState::Defeat))
+            .add_system(restart.run_in_state(AppState::Victory))
             .add_enter_system(AppState::Teardown, enter_teardown);
     }
 }

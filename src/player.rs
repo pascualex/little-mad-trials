@@ -11,12 +11,7 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_enter_system(AppState::Setup, enter_setup)
-            .add_system_set(
-                ConditionSet::new()
-                    .run_in_state(AppState::Game)
-                    .with_system(movement)
-                    .into(),
-            )
+            .add_system(movement.run_in_state(AppState::Game).label("movement"))
             .add_enter_system(AppState::Teardown, enter_teardown);
     }
 }

@@ -16,14 +16,14 @@ impl Plugin for LaserPlugin {
         app.add_plugin(VisualsPlugin)
             .add_enter_system(AppState::Setup, enter_setup)
             .add_enter_system(AppState::Teardown, enter_teardown)
-            .add_system_set(
-                ConditionSet::new()
+            .add_system(mode.run_in_state(AppState::Game).label("mode"))
+            .add_system(
+                movement
                     .run_in_state(AppState::Game)
-                    .with_system(mode)
-                    .with_system(movement)
-                    .with_system(attack)
-                    .into(),
-            );
+                    .label("movement")
+                    .after("mode"),
+            )
+            .add_system(attack.run_in_state(AppState::Game).after("movement"));
     }
 }
 
