@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use iyes_loopless::prelude::*;
 
 use crate::{palette, AppState};
 
@@ -9,17 +8,10 @@ impl Plugin for BackgroundPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Countdown::new(20.8))
             .add_startup_system(setup)
-            .add_enter_system(AppState::Game, enter_game)
-            .add_system_set(
-                ConditionSet::new()
-                    .run_in_state(AppState::Game)
-                    .with_system(countdown)
-                    // TODO: remove
-                    .with_system(instant_victory)
-                    .into(),
-            )
-            .add_enter_system(AppState::Defeat, enter_defeat)
-            .add_enter_system(AppState::Victory, enter_victory);
+            .add_system_set(SystemSet::on_enter(AppState::Game).with_system(enter_game))
+            .add_system_set(SystemSet::on_update(AppState::Game).with_system(countdown))
+            .add_system_set(SystemSet::on_enter(AppState::Defeat).with_system(enter_defeat))
+            .add_system_set(SystemSet::on_enter(AppState::Victory).with_system(enter_victory));
     }
 }
 
@@ -104,19 +96,13 @@ fn countdown(
     mut query: Query<&mut Text, With<CountdownText>>,
     mut countdown: ResMut<Countdown>,
     time: Res<Time>,
-    mut commands: Commands,
+    mut state: ResMut<State<AppState>>,
 ) {
     let mut text = query.single_mut();
     countdown.timer.tick(time.delta());
     let remaining = countdown.timer.duration() - countdown.timer.elapsed();
     text.sections[0].value = format!("{:.0}", remaining.as_secs_f32());
     if countdown.timer.finished() {
-        commands.insert_resource(NextState(AppState::Victory));
-    }
-}
-
-fn instant_victory(input: Res<Input<KeyCode>>, mut commands: Commands) {
-    if input.pressed(KeyCode::V) {
-        commands.insert_resource(NextState(AppState::Victory));
+        state.set(AppState::Victory).unwrap();
     }
 }

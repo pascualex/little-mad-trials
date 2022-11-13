@@ -3,9 +3,14 @@ mod visuals;
 use std::{f32::consts::PI, time::Duration};
 
 use bevy::prelude::*;
-use iyes_loopless::prelude::*;
 
-use crate::{background::Countdown, board::Position, palette, player::Player, AppState};
+use crate::{
+    background::Countdown,
+    board::Position,
+    palette,
+    player::{self, Player},
+    AppState,
+};
 
 use self::visuals::{ray_blueprint, turrets_blueprint, Visuals, VisualsPlugin};
 
@@ -14,16 +19,14 @@ pub struct LaserPlugin;
 impl Plugin for LaserPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(VisualsPlugin)
-            .add_enter_system(AppState::Setup, enter_setup)
-            .add_enter_system(AppState::Teardown, enter_teardown)
-            .add_system(mode.run_in_state(AppState::Game).label("mode"))
-            .add_system(
-                movement
-                    .run_in_state(AppState::Game)
-                    .label("movement")
-                    .after("mode"),
-            )
-            .add_system(attack.run_in_state(AppState::Game).after("movement"));
+            .add_system_set(SystemSet::on_enter(AppState::Setup).with_system(enter_setup))
+            .add_system_set(SystemSet::on_enter(AppState::Teardown).with_system(enter_teardown))
+            .add_system_set(
+                SystemSet::on_update(AppState::Game)
+                    .with_system(mode)
+                    .with_system(movement.after(mode))
+                    .with_system(attack.after(movement).after(player::movement)),
+            );
     }
 }
 
@@ -280,7 +283,7 @@ fn movement(
 fn attack(
     laser_query: Query<(&Position, &Laser), Without<Player>>,
     mut player_query: Query<&Position, With<Player>>,
-    mut commands: Commands,
+    mut state: ResMut<State<AppState>>,
 ) {
     let player_position = player_query.single_mut();
     for (laser_position, laser) in &laser_query {
@@ -289,7 +292,7 @@ fn attack(
             Axis::Vertical => laser_position.vec.x == player_position.vec.x,
         };
         if matches!(laser.mode(), Mode::Shooting) && aligned {
-            commands.insert_resource(NextState(AppState::Defeat));
+            state.set(AppState::Defeat).unwrap();
         }
     }
 }

@@ -6,7 +6,6 @@ mod player;
 
 use background::BackgroundPlugin;
 use bevy::prelude::*;
-use iyes_loopless::prelude::*;
 
 use self::{board::BoardPlugin, laser::LaserPlugin, player::PlayerPlugin};
 
@@ -14,16 +13,17 @@ pub struct AppPlugin;
 
 impl Plugin for AppPlugin {
     fn build(&self, app: &mut App) {
-        app.add_loopless_state(AppState::Setup)
+        app.add_state(AppState::Setup)
             .add_plugin(BackgroundPlugin)
             .add_plugin(BoardPlugin)
             .add_plugin(PlayerPlugin)
             .add_plugin(LaserPlugin)
             .add_startup_system(setup)
-            .add_enter_system(AppState::Setup, enter_setup)
-            .add_system(restart.run_in_state(AppState::Defeat))
-            .add_system(restart.run_in_state(AppState::Victory))
-            .add_enter_system(AppState::Teardown, enter_teardown);
+            .add_system_set(SystemSet::on_enter(AppState::Setup).with_system(enter_setup))
+            .add_system_set(SystemSet::on_update(AppState::Game).with_system(instant_victory))
+            .add_system_set(SystemSet::on_update(AppState::Defeat).with_system(restart))
+            .add_system_set(SystemSet::on_update(AppState::Victory).with_system(restart))
+            .add_system_set(SystemSet::on_enter(AppState::Teardown).with_system(enter_teardown));
     }
 }
 
@@ -63,16 +63,24 @@ fn setup(mut commands: Commands) {
     });
 }
 
-fn enter_setup(mut commands: Commands) {
-    commands.insert_resource(NextState(AppState::Game));
+fn enter_setup(mut state: ResMut<State<AppState>>) {
+    state.overwrite_set(AppState::Game).unwrap();
 }
 
-fn enter_teardown(mut commands: Commands) {
-    commands.insert_resource(NextState(AppState::Setup));
+fn enter_teardown(mut state: ResMut<State<AppState>>) {
+    state.overwrite_set(AppState::Setup).unwrap();
 }
 
-fn restart(input: Res<Input<KeyCode>>, mut commands: Commands) {
-    if input.pressed(KeyCode::Space) {
-        commands.insert_resource(NextState(AppState::Teardown));
+fn restart(mut input: ResMut<Input<KeyCode>>, mut state: ResMut<State<AppState>>) {
+    if input.just_pressed(KeyCode::Space) {
+        state.set(AppState::Teardown).unwrap();
+        input.clear(); // avoids infinite loops until stageless
+    }
+}
+
+fn instant_victory(mut input: ResMut<Input<KeyCode>>, mut state: ResMut<State<AppState>>) {
+    if input.just_pressed(KeyCode::V) {
+        state.set(AppState::Victory).unwrap();
+        input.clear(); // avoids infinite loops until stageless
     }
 }

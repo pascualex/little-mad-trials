@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use iyes_loopless::prelude::*;
 
 use crate::{
     board::{Board, Position},
@@ -10,9 +9,9 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_enter_system(AppState::Setup, enter_setup)
-            .add_system(movement.run_in_state(AppState::Game).label("movement"))
-            .add_enter_system(AppState::Teardown, enter_teardown);
+        app.add_system_set(SystemSet::on_enter(AppState::Setup).with_system(enter_setup))
+            .add_system_set(SystemSet::on_update(AppState::Game).with_system(movement))
+            .add_system_set(SystemSet::on_enter(AppState::Teardown).with_system(enter_teardown));
     }
 }
 
@@ -46,7 +45,7 @@ fn enter_teardown(query: Query<Entity, With<Player>>, mut commands: Commands) {
 #[derive(Component)]
 pub struct Player;
 
-fn movement(
+pub fn movement(
     mut query: Query<&mut Position, With<Player>>,
     board: Res<Board>,
     input: Res<Input<KeyCode>>,

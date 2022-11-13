@@ -11,4 +11,3 @@ opt-level = 3
 
 [dependencies]
 bevy = { version = "0.8" }
-iyes_loopless = { version = "0.8", features = ["fixedtimestep", "states"] }
