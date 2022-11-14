@@ -14,6 +14,7 @@ impl Plugin for PhasesPlugin {
 pub struct Phases<T: Default + Send + Sync + 'static> {
     pub vec: Vec<Phase<T>>,
     pub start: Duration,
+    pub progress: f32,
 }
 
 impl<T: Default + Clone + Copy + Send + Sync> Phases<T> {
@@ -21,6 +22,7 @@ impl<T: Default + Clone + Copy + Send + Sync> Phases<T> {
         Self {
             vec,
             start: Duration::ZERO,
+            progress: 0.0,
         }
     }
 
@@ -46,18 +48,26 @@ impl<T> Phase<T> {
     }
 }
 
-pub fn phases<T: Default + Send + Sync>(
+pub fn transition<T: Default + Send + Sync>(
     mut query: Query<&mut Phases<T>>,
     countdown: Res<Countdown>,
 ) {
-    for mut laser in &mut query {
-        let duration = match laser.vec.first() {
+    for mut phases in &mut query {
+        let duration = match phases.vec.first() {
             Some(phase) => phase.duration,
             None => continue,
         };
-        if countdown.timer.elapsed() >= laser.start + duration {
-            laser.start += duration;
-            laser.vec.remove(0);
+        if countdown.timer.elapsed() >= phases.start + duration {
+            phases.start += duration;
+            phases.vec.remove(0);
         }
+        let elapsed = countdown.timer.elapsed() - phases.start;
+        phases.progress = match phases.vec.first() {
+            Some(phase) => match phase.duration {
+                Duration::ZERO => 1.0,
+                _ => f32::min(elapsed.as_secs_f32() / phase.duration.as_secs_f32(), 1.0),
+            },
+            None => 1.0,
+        };
     }
 }

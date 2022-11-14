@@ -1,6 +1,11 @@
 use bevy::{prelude::*, utils::HashSet};
 
-use crate::palette;
+use crate::{
+    palette,
+    phases::{self, Phases},
+};
+
+const HIDDEN_HEIGHT: f32 = -1.0;
 
 pub struct BoardPlugin;
 
@@ -8,7 +13,9 @@ impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Board>()
             .add_startup_system(setup)
-            .add_system(to_world);
+            .add_system(phases::transition::<BoardMode>)
+            .add_system(to_world_xz)
+            .add_system(to_world_y.after(phases::transition::<BoardMode>));
     }
 }
 
@@ -47,6 +54,15 @@ pub struct Position {
     pub vec: IVec2,
 }
 
+#[derive(Default, Clone, Copy)]
+pub enum BoardMode {
+    #[default]
+    Hidden,
+    Entering,
+    Shown,
+    Exiting,
+}
+
 impl Position {
     pub fn new(vec: IVec2) -> Self {
         Self { vec }
@@ -59,9 +75,20 @@ impl Position {
     }
 }
 
-fn to_world(mut query: Query<(&mut Transform, &Position)>) {
+fn to_world_xz(mut query: Query<(&mut Transform, &Position)>) {
     for (mut transform, position) in &mut query {
         transform.translation.x = position.vec.x as f32;
         transform.translation.z = -position.vec.y as f32;
+    }
+}
+
+fn to_world_y(mut query: Query<(&mut Transform, &Phases<BoardMode>)>) {
+    for (mut transform, phases) in &mut query {
+        transform.translation.y = match phases.mode() {
+            BoardMode::Hidden => HIDDEN_HEIGHT,
+            BoardMode::Entering => HIDDEN_HEIGHT * (1.0 - phases.progress),
+            BoardMode::Shown => 0.0,
+            BoardMode::Exiting => HIDDEN_HEIGHT * phases.progress,
+        };
     }
 }

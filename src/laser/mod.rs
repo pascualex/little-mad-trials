@@ -6,7 +6,7 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 
 use crate::{
-    board::Position,
+    board::{BoardMode, Position},
     palette,
     phases::{self, Phase, Phases},
     player::{self, Player},
@@ -27,10 +27,10 @@ impl Plugin for LaserPlugin {
             .add_system_set(SystemSet::on_enter(AppState::Teardown).with_system(enter_teardown))
             .add_system_set(
                 SystemSet::on_update(AppState::Game)
-                    .with_system(movement.after(phases::phases::<LaserMode>))
+                    .with_system(movement.after(phases::transition::<LaserMode>))
                     .with_system(attack.after(movement).after(player::movement)),
             )
-            .add_system(phases::phases::<LaserMode>);
+            .add_system(phases::transition::<LaserMode>);
     }
 }
 
@@ -40,70 +40,107 @@ fn enter_setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     laser(
-        &mut commands,
         IVec2::ZERO,
-        Axis::Vertical,
-        true,
+        Laser::new(Axis::Vertical, true),
+        vec![
+            Phase::new(BoardMode::Shown, 20.0),  // 20.0
+            Phase::new(BoardMode::Exiting, 1.0), // 21.0
+        ],
         moving_laser_phases(),
+        &mut commands,
         &mut meshes,
         &mut materials,
     );
     laser(
-        &mut commands,
         IVec2::new(0, 1),
-        Axis::Horizontal,
-        false,
+        Laser::new(Axis::Horizontal, false),
+        vec![
+            Phase::new(BoardMode::Hidden, 3.4),   // 3.4
+            Phase::new(BoardMode::Entering, 1.0), // 4.4
+            Phase::new(BoardMode::Shown, 3.7),    // 8.1
+            Phase::new(BoardMode::Exiting, 1.0),  // 9.1
+            Phase::new(BoardMode::Hidden, 2.7),   // 11.8
+            Phase::new(BoardMode::Entering, 1.0), // 12.8
+            Phase::new(BoardMode::Shown, 7.2),    // 20.0
+            Phase::new(BoardMode::Exiting, 1.0),  // 21.0
+        ],
         upper_laser_phases(),
+        &mut commands,
         &mut meshes,
         &mut materials,
     );
     laser(
-        &mut commands,
         IVec2::new(0, 0),
-        Axis::Horizontal,
-        false,
+        Laser::new(Axis::Horizontal, false),
+        vec![
+            Phase::new(BoardMode::Hidden, 4.9),   // 4.9
+            Phase::new(BoardMode::Entering, 1.0), // 5.9
+            Phase::new(BoardMode::Shown, 0.7),    // 6.6
+            Phase::new(BoardMode::Exiting, 1.0),  // 7.6
+            Phase::new(BoardMode::Hidden, 4.2),   // 11.8
+            Phase::new(BoardMode::Entering, 1.0), // 12.8
+            Phase::new(BoardMode::Shown, 2.7),    // 14.5
+            Phase::new(BoardMode::Exiting, 1.0),  // 15.5
+        ],
         middle_laser_phases(),
+        &mut commands,
         &mut meshes,
         &mut materials,
     );
     laser(
-        &mut commands,
         IVec2::new(0, -1),
-        Axis::Horizontal,
-        false,
+        Laser::new(Axis::Horizontal, false),
+        vec![
+            Phase::new(BoardMode::Hidden, 3.4),   // 3.4
+            Phase::new(BoardMode::Entering, 1.0), // 4.4
+            Phase::new(BoardMode::Shown, 3.7),    // 8.1
+            Phase::new(BoardMode::Exiting, 1.0),  // 9.1
+            Phase::new(BoardMode::Hidden, 3.7),   // 12.8
+            Phase::new(BoardMode::Entering, 1.0), // 13.8
+            Phase::new(BoardMode::Shown, 6.2),    // 20.0
+            Phase::new(BoardMode::Exiting, 1.0),  // 21.0
+        ],
         lower_laser_phases(),
+        &mut commands,
         &mut meshes,
         &mut materials,
     );
 }
 
 fn laser(
-    commands: &mut Commands,
     position: IVec2,
-    axis: Axis,
-    mobile: bool,
-    phases: Vec<Phase<LaserMode>>,
+    laser: Laser,
+    board_phases: Vec<Phase<BoardMode>>,
+    laser_phases: Vec<Phase<LaserMode>>,
+    commands: &mut Commands,
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<StandardMaterial>,
 ) {
-    let rotation = match axis {
+    let rotation = match laser.axis {
         Axis::Horizontal => PI / 2.0,
         Axis::Vertical => 0.0,
     };
     let normal = turrets_blueprint(commands, palette::DARK_YELLOW, meshes, materials);
     let charging = turrets_blueprint(commands, palette::DARK_RED, meshes, materials);
     let ray = ray_blueprint(commands, meshes, materials);
-    let root = (
+    let model = (
         TransformBundle::from_transform(
             Transform::from_xyz(0.0, 0.5, 0.0).with_rotation(Quat::from_rotation_y(rotation)),
         ),
         VisibilityBundle::default(),
-        Position::new(position),
-        Phases::new(phases),
-        Laser::new(axis, mobile),
-        Visuals::new(normal, charging, ray),
     );
-    commands.spawn(root).push_children(&[normal, charging, ray]);
+    let root = (
+        TransformBundle::default(),
+        VisibilityBundle::default(),
+        Position::new(position),
+        laser,
+        Visuals::new(normal, charging, ray),
+        Phases::new(board_phases),
+        Phases::new(laser_phases),
+    );
+    commands.spawn(root).with_children(|builder| {
+        builder.spawn(model).push_children(&[normal, charging, ray]);
+    });
 }
 
 fn enter_teardown(query: Query<Entity, With<Laser>>, mut commands: Commands) {
