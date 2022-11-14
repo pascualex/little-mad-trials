@@ -6,7 +6,7 @@ pub struct BackgroundPlugin;
 
 impl Plugin for BackgroundPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(Countdown::new(20.0))
+        app.insert_resource(Countdown::new(20.01)) // 0.01 to avoid roundoff errors
             .add_startup_system(setup)
             .add_system_set(SystemSet::on_enter(AppState::Start).with_system(enter_start))
             .add_system_set(SystemSet::on_update(AppState::Game).with_system(countdown))
@@ -109,7 +109,7 @@ fn countdown(
     let mut text = query.single_mut();
     countdown.timer.tick(time.delta());
     let remaining = countdown.timer.duration() - countdown.timer.elapsed();
-    text.sections[0].value = format!("{:.0}", remaining.as_secs_f32());
+    text.sections[0].value = format!("{:.1}", remaining.as_secs_f32());
     if countdown.timer.finished() {
         state.overwrite_set(AppState::Victory).unwrap();
     }

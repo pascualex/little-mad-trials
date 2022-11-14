@@ -10,8 +10,8 @@ pub struct VisualsPlugin;
 
 impl Plugin for VisualsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(charge.after(laser::mode))
-            .add_system(attack.after(laser::mode));
+        app.add_system(charge.after(laser::phase))
+            .add_system(attack.after(laser::phase));
     }
 }
 

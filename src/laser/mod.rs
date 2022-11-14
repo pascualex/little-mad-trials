@@ -1,3 +1,4 @@
+mod phases;
 mod visuals;
 
 use std::{f32::consts::PI, time::Duration};
@@ -12,7 +13,10 @@ use crate::{
     AppState,
 };
 
-use self::visuals::{ray_blueprint, turrets_blueprint, Visuals, VisualsPlugin};
+use self::{
+    phases::{lower_laser_phases, middle_laser_phases, moving_laser_phases, upper_laser_phases},
+    visuals::{ray_blueprint, turrets_blueprint, Visuals, VisualsPlugin},
+};
 
 pub struct LaserPlugin;
 
@@ -23,10 +27,10 @@ impl Plugin for LaserPlugin {
             .add_system_set(SystemSet::on_enter(AppState::Teardown).with_system(enter_teardown))
             .add_system_set(
                 SystemSet::on_update(AppState::Game)
-                    .with_system(movement.after(mode))
+                    .with_system(movement.after(phase))
                     .with_system(attack.after(movement).after(player::movement)),
             )
-            .add_system(mode);
+            .add_system(phase);
     }
 }
 
@@ -40,108 +44,7 @@ fn enter_setup(
         IVec2::ZERO,
         Axis::Vertical,
         true,
-        vec![
-            // first round
-            Phase::new(Mode::Charging, 0.2),
-            Phase::new(Mode::Shooting, 0.4),
-            Phase::new(Mode::Ready, 1.2),
-            Phase::new(Mode::Charging, 1.7),
-            Phase::new(Mode::Shooting, 1.9),
-            Phase::new(Mode::Ready, 2.7),
-            Phase::new(Mode::Charging, 3.2),
-            Phase::new(Mode::Shooting, 3.4),
-            // second round
-            Phase::new(Mode::Ready, 4.4),
-            Phase::new(Mode::Charging, 4.9),
-            Phase::new(Mode::Shooting, 5.1),
-            Phase::new(Mode::Ready, 5.9),
-            Phase::new(Mode::Charging, 6.4),
-            Phase::new(Mode::Shooting, 6.6),
-            Phase::new(Mode::Ready, 7.4),
-            Phase::new(Mode::Charging, 7.9),
-            Phase::new(Mode::Shooting, 8.1),
-            // third round
-            Phase::new(Mode::Ready, 9.1),
-            Phase::new(Mode::Charging, 9.6),
-            Phase::new(Mode::Shooting, 9.8),
-            Phase::new(Mode::Ready, 10.1),
-            Phase::new(Mode::Charging, 10.6),
-            Phase::new(Mode::Shooting, 10.8),
-            Phase::new(Mode::Ready, 11.1),
-            Phase::new(Mode::Charging, 11.6),
-            Phase::new(Mode::Shooting, 11.8),
-            // fourth round
-            Phase::new(Mode::Ready, 12.8),
-            Phase::new(Mode::Charging, 13.3),
-            Phase::new(Mode::Shooting, 13.5),
-            Phase::new(Mode::Ready, 13.8),
-            Phase::new(Mode::Charging, 14.3),
-            Phase::new(Mode::Shooting, 14.5),
-            Phase::new(Mode::Ready, 14.8),
-            Phase::new(Mode::Charging, 15.3),
-            Phase::new(Mode::Shooting, 15.5),
-            // fifth round
-            Phase::new(Mode::Ready, 16.5),
-            Phase::new(Mode::Charging, 17.0),
-            Phase::new(Mode::Shooting, 17.2),
-            Phase::new(Mode::Ready, 17.2),
-            Phase::new(Mode::Charging, 17.7),
-            Phase::new(Mode::Shooting, 17.9),
-            Phase::new(Mode::Ready, 17.9),
-            Phase::new(Mode::Charging, 18.4),
-            Phase::new(Mode::Shooting, 18.6),
-            Phase::new(Mode::Ready, 18.6),
-            Phase::new(Mode::Charging, 19.1),
-            Phase::new(Mode::Shooting, 19.3),
-            Phase::new(Mode::Ready, 19.3),
-            Phase::new(Mode::Charging, 19.8),
-            Phase::new(Mode::Shooting, 20.0),
-        ],
-        &mut meshes,
-        &mut materials,
-    );
-    laser(
-        &mut commands,
-        IVec2::new(0, -1),
-        Axis::Horizontal,
-        false,
-        vec![
-            // second round
-            Phase::new(Mode::Ready, 4.4),
-            Phase::new(Mode::Charging, 4.9),
-            Phase::new(Mode::Shooting, 5.1),
-            Phase::new(Mode::Ready, 7.4),
-            Phase::new(Mode::Charging, 7.9),
-            Phase::new(Mode::Shooting, 8.1),
-            // fourth round
-            Phase::new(Mode::Ready, 13.8),
-            Phase::new(Mode::Charging, 14.3),
-            Phase::new(Mode::Shooting, 14.5),
-            Phase::new(Mode::Ready, 14.8),
-            Phase::new(Mode::Charging, 15.3),
-            Phase::new(Mode::Shooting, 20.0),
-        ],
-        &mut meshes,
-        &mut materials,
-    );
-    laser(
-        &mut commands,
-        IVec2::new(0, 0),
-        Axis::Horizontal,
-        false,
-        vec![
-            // second round
-            Phase::new(Mode::Ready, 5.9),
-            Phase::new(Mode::Charging, 6.4),
-            Phase::new(Mode::Shooting, 6.6),
-            // fourth round
-            Phase::new(Mode::Ready, 12.8),
-            Phase::new(Mode::Charging, 13.3),
-            Phase::new(Mode::Shooting, 13.5),
-            Phase::new(Mode::Ready, 13.8),
-            Phase::new(Mode::Charging, 14.3),
-            Phase::new(Mode::Shooting, 14.5),
-        ],
+        moving_laser_phases(),
         &mut meshes,
         &mut materials,
     );
@@ -150,22 +53,25 @@ fn enter_setup(
         IVec2::new(0, 1),
         Axis::Horizontal,
         false,
-        vec![
-            // second round
-            Phase::new(Mode::Ready, 4.4),
-            Phase::new(Mode::Charging, 4.9),
-            Phase::new(Mode::Shooting, 5.1),
-            Phase::new(Mode::Ready, 7.4),
-            Phase::new(Mode::Charging, 7.9),
-            Phase::new(Mode::Shooting, 8.1),
-            // fourth round
-            Phase::new(Mode::Ready, 12.8),
-            Phase::new(Mode::Charging, 13.3),
-            Phase::new(Mode::Shooting, 13.5),
-            Phase::new(Mode::Ready, 14.8),
-            Phase::new(Mode::Charging, 15.3),
-            Phase::new(Mode::Shooting, 20.0),
-        ],
+        upper_laser_phases(),
+        &mut meshes,
+        &mut materials,
+    );
+    laser(
+        &mut commands,
+        IVec2::new(0, 0),
+        Axis::Horizontal,
+        false,
+        middle_laser_phases(),
+        &mut meshes,
+        &mut materials,
+    );
+    laser(
+        &mut commands,
+        IVec2::new(0, -1),
+        Axis::Horizontal,
+        false,
+        lower_laser_phases(),
         &mut meshes,
         &mut materials,
     );
@@ -210,6 +116,7 @@ struct Laser {
     pub axis: Axis,
     pub mobile: bool,
     pub phases: Vec<Phase>,
+    pub phase_start: Duration,
 }
 
 impl Laser {
@@ -218,6 +125,7 @@ impl Laser {
             axis,
             mobile,
             phases,
+            phase_start: Duration::ZERO,
         }
     }
 
@@ -234,33 +142,35 @@ enum Axis {
     Vertical,
 }
 
-struct Phase {
+pub struct Phase {
     pub mode: Mode,
-    pub end: Duration,
+    pub duration: Duration,
 }
 
 impl Phase {
     pub fn new(mode: Mode, seconds: f32) -> Self {
         Self {
             mode,
-            end: Duration::from_secs_f32(seconds),
+            duration: Duration::from_secs_f32(seconds),
         }
     }
 }
 
 #[derive(Clone, Copy)]
-enum Mode {
+pub enum Mode {
     Ready,
     Charging,
     Shooting,
 }
 
-fn mode(mut query: Query<&mut Laser>, countdown: Res<Countdown>) {
+fn phase(mut query: Query<&mut Laser>, countdown: Res<Countdown>) {
     for mut laser in &mut query {
-        let Some(phase) = laser.phases.first() else {
-            continue;
+        let duration = match laser.phases.first() {
+            Some(phase) => phase.duration,
+            None => continue,
         };
-        if countdown.timer.elapsed() >= phase.end {
+        if countdown.timer.elapsed() >= laser.phase_start + duration {
+            laser.phase_start += duration;
             laser.phases.remove(0);
         }
     }
