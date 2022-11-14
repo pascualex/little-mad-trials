@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    laser::{Laser, Mode},
+    laser::{self, Laser, Mode},
     palette,
     player::Player,
 };
@@ -10,8 +10,8 @@ pub struct VisualsPlugin;
 
 impl Plugin for VisualsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(charge.after("charge"))
-            .add_system(attack.after("charge"));
+        app.add_system(charge.after(laser::mode))
+            .add_system(attack.after(laser::mode));
     }
 }
 
@@ -21,6 +21,7 @@ pub fn turrets_blueprint(
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<StandardMaterial>,
 ) -> Entity {
+    let root = (TransformBundle::default(), VisibilityBundle::default());
     let top = MaterialMeshBundle {
         mesh: meshes.add(Mesh::from(shape::Box::new(0.3, 0.3, 0.6))),
         material: materials.add(StandardMaterial {
@@ -46,11 +47,10 @@ pub fn turrets_blueprint(
         ..default()
     };
     commands
-        .spawn_bundle(TransformBundle::default())
-        .insert_bundle(VisibilityBundle::default())
+        .spawn(root)
         .with_children(|builder| {
-            builder.spawn_bundle(top);
-            builder.spawn_bundle(bottom);
+            builder.spawn(top);
+            builder.spawn(bottom);
         })
         .id()
 }
@@ -60,21 +60,20 @@ pub fn ray_blueprint(
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<StandardMaterial>,
 ) -> Entity {
-    commands
-        .spawn_bundle(MaterialMeshBundle {
-            mesh: meshes.add(Mesh::from(shape::Box::new(0.1, 0.1, 4.0))),
-            material: materials.add(StandardMaterial {
-                base_color: palette::DARK_RED,
-                metallic: 0.1,
-                perceptual_roughness: 0.7,
-                reflectance: 0.3,
-                ..default()
-            }),
-            transform: Transform::from_xyz(0.0, 0.0, 0.0),
-            visibility: Visibility { is_visible: false },
+    let root = MaterialMeshBundle {
+        mesh: meshes.add(Mesh::from(shape::Box::new(0.1, 0.1, 4.0))),
+        material: materials.add(StandardMaterial {
+            base_color: palette::DARK_RED,
+            metallic: 0.1,
+            perceptual_roughness: 0.7,
+            reflectance: 0.3,
             ..default()
-        })
-        .id()
+        }),
+        transform: Transform::from_xyz(0.0, 0.0, 0.0),
+        visibility: Visibility { is_visible: false },
+        ..default()
+    };
+    commands.spawn(root).id()
 }
 
 #[derive(Component)]

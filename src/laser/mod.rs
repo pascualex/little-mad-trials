@@ -180,22 +180,23 @@ fn laser(
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<StandardMaterial>,
 ) {
-    let normal = turrets_blueprint(commands, palette::DARK_YELLOW, meshes, materials);
-    let charging = turrets_blueprint(commands, palette::DARK_RED, meshes, materials);
-    let ray = ray_blueprint(commands, meshes, materials);
     let rotation = match axis {
         Axis::Horizontal => PI / 2.0,
         Axis::Vertical => 0.0,
     };
-    commands
-        .spawn_bundle(TransformBundle::from_transform(
+    let normal = turrets_blueprint(commands, palette::DARK_YELLOW, meshes, materials);
+    let charging = turrets_blueprint(commands, palette::DARK_RED, meshes, materials);
+    let ray = ray_blueprint(commands, meshes, materials);
+    let root = (
+        TransformBundle::from_transform(
             Transform::from_xyz(0.0, 0.5, 0.0).with_rotation(Quat::from_rotation_y(rotation)),
-        ))
-        .insert_bundle(VisibilityBundle::default())
-        .insert(Position::new(position))
-        .insert(Laser::new(axis, mobile, phases))
-        .insert(Visuals::new(normal, charging, ray))
-        .push_children(&[normal, charging, ray]);
+        ),
+        VisibilityBundle::default(),
+        Position::new(position),
+        Laser::new(axis, mobile, phases),
+        Visuals::new(normal, charging, ray),
+    );
+    commands.spawn(root).push_children(&[normal, charging, ray]);
 }
 
 fn enter_teardown(query: Query<Entity, With<Laser>>, mut commands: Commands) {
@@ -292,7 +293,7 @@ fn attack(
             Axis::Vertical => laser_position.vec.x == player_position.vec.x,
         };
         if matches!(laser.mode(), Mode::Shooting) && aligned {
-            state.set(AppState::Defeat).unwrap();
+            state.overwrite_set(AppState::Defeat).unwrap();
         }
     }
 }

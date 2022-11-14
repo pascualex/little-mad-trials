@@ -37,12 +37,12 @@ enum AppState {
 }
 
 fn setup(mut commands: Commands) {
-    commands.spawn_bundle(Camera3dBundle {
+    commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(5.0, 15.0, 15.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     });
     let size = 11.0;
-    commands.spawn_bundle(DirectionalLightBundle {
+    commands.spawn(DirectionalLightBundle {
         transform: Transform::from_translation(Vec3::ZERO)
             .looking_at(Vec3::new(-1.0, -3.0, -2.0), Vec3::Y),
         directional_light: DirectionalLight {
@@ -73,14 +73,14 @@ fn enter_teardown(mut state: ResMut<State<AppState>>) {
 
 fn restart(mut input: ResMut<Input<KeyCode>>, mut state: ResMut<State<AppState>>) {
     if input.just_pressed(KeyCode::Space) {
-        state.set(AppState::Teardown).unwrap();
+        state.overwrite_set(AppState::Teardown).unwrap();
         input.clear(); // avoids infinite loops until stageless
     }
 }
 
 fn instant_victory(mut input: ResMut<Input<KeyCode>>, mut state: ResMut<State<AppState>>) {
     if input.just_pressed(KeyCode::V) {
-        state.set(AppState::Victory).unwrap();
+        state.overwrite_set(AppState::Victory).unwrap();
         input.clear(); // avoids infinite loops until stageless
     }
 }

@@ -21,7 +21,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    commands.spawn_bundle(MaterialMeshBundle {
+    commands.spawn(MaterialMeshBundle {
         mesh: meshes.add(Mesh::from(shape::Box::new(4.0, 2.5, 0.1))),
         material: materials.add(StandardMaterial {
             base_color: palette::DARK_BLACK,
@@ -33,8 +33,24 @@ fn setup(
         transform: Transform::from_xyz(0.0, 4.0, -7.0),
         ..default()
     });
-    let text = commands
-        .spawn_bundle(TextBundle {
+    screen_ui(&mut commands, &asset_server);
+}
+
+fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
+    let root = NodeBundle {
+        style: Style {
+            min_size: Size::new(Val::Px(70.0), Val::Undefined),
+            margin: UiRect::new(Val::Auto, Val::Px(10.0), Val::Px(10.0), Val::Auto),
+            padding: UiRect::all(Val::Px(16.0)),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            ..default()
+        },
+        background_color: palette::DARK_BLACK.into(),
+        ..default()
+    };
+    let text = (
+        TextBundle {
             text: Text::from_section(
                 "20",
                 TextStyle {
@@ -44,23 +60,12 @@ fn setup(
                 },
             ),
             ..default()
-        })
-        .insert(CountdownText)
-        .id();
-    commands
-        .spawn_bundle(NodeBundle {
-            style: Style {
-                min_size: Size::new(Val::Px(70.0), Val::Undefined),
-                margin: UiRect::new(Val::Auto, Val::Px(10.0), Val::Px(10.0), Val::Auto),
-                padding: UiRect::all(Val::Px(16.0)),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                ..default()
-            },
-            color: palette::DARK_BLACK.into(),
-            ..default()
-        })
-        .push_children(&[text]);
+        },
+        CountdownText,
+    );
+    commands.spawn(root).with_children(|builder| {
+        builder.spawn(text);
+    });
 }
 
 fn enter_game(mut countdown: ResMut<Countdown>) {
@@ -77,6 +82,7 @@ fn enter_victory(mut query: Query<&mut Text, With<CountdownText>>) {
     text.sections[0].value = "Victory!".to_string();
 }
 
+#[derive(Resource)]
 pub struct Countdown {
     pub timer: Timer,
 }
@@ -84,7 +90,7 @@ pub struct Countdown {
 impl Countdown {
     pub fn new(seconds: f32) -> Self {
         Self {
-            timer: Timer::from_seconds(seconds, false),
+            timer: Timer::from_seconds(seconds, TimerMode::Once),
         }
     }
 }
@@ -103,6 +109,6 @@ fn countdown(
     let remaining = countdown.timer.duration() - countdown.timer.elapsed();
     text.sections[0].value = format!("{:.0}", remaining.as_secs_f32());
     if countdown.timer.finished() {
-        state.set(AppState::Victory).unwrap();
+        state.overwrite_set(AppState::Victory).unwrap();
     }
 }

@@ -20,7 +20,7 @@ fn setup(
 ) {
     for i in -1..=1 {
         for j in -1..=1 {
-            commands.spawn_bundle(MaterialMeshBundle {
+            commands.spawn(MaterialMeshBundle {
                 mesh: meshes.add(Mesh::from(shape::Box::new(0.92, 4.0, 0.92))),
                 material: materials.add(StandardMaterial {
                     base_color: palette::LIGHT_WHITE,
@@ -37,7 +37,7 @@ fn setup(
     }
 }
 
-#[derive(Default)]
+#[derive(Resource, Default)]
 pub struct Board {
     pub tiles: HashSet<IVec2>,
 }

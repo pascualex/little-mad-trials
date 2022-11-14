@@ -20,8 +20,8 @@ fn enter_setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    commands
-        .spawn_bundle(MaterialMeshBundle {
+    commands.spawn((
+        MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Cube::new(0.8))),
             material: materials.add(StandardMaterial {
                 base_color: palette::DARK_BLUE,
@@ -32,9 +32,10 @@ fn enter_setup(
             }),
             transform: Transform::from_xyz(0.0, 0.4, 0.0),
             ..default()
-        })
-        .insert(Position::from_xy(0, 0))
-        .insert(Player);
+        },
+        Position::from_xy(0, 0),
+        Player,
+    ));
 }
 
 fn enter_teardown(query: Query<Entity, With<Player>>, mut commands: Commands) {
