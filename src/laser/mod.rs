@@ -8,7 +8,7 @@ use bevy::prelude::*;
 use crate::{
     board::Position,
     palette,
-    phases::{self, Mode, Phase, Phases},
+    phases::{self, Phase, Phases},
     player::{self, Player},
     AppState,
 };
@@ -27,9 +27,10 @@ impl Plugin for LaserPlugin {
             .add_system_set(SystemSet::on_enter(AppState::Teardown).with_system(enter_teardown))
             .add_system_set(
                 SystemSet::on_update(AppState::Game)
-                    .with_system(movement.after(phases::phases))
+                    .with_system(movement.after(phases::phases::<LaserMode>))
                     .with_system(attack.after(movement).after(player::movement)),
-            );
+            )
+            .add_system(phases::phases::<LaserMode>);
     }
 }
 
@@ -81,7 +82,7 @@ fn laser(
     position: IVec2,
     axis: Axis,
     mobile: bool,
-    phases: Vec<Phase>,
+    phases: Vec<Phase<LaserMode>>,
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<StandardMaterial>,
 ) {
@@ -128,13 +129,21 @@ enum Axis {
     Vertical,
 }
 
+#[derive(Default, Clone, Copy)]
+pub enum LaserMode {
+    #[default]
+    Ready,
+    Charging,
+    Shooting,
+}
+
 fn movement(
-    mut laser_query: Query<(&mut Position, &Laser, &Phases), Without<Player>>,
+    mut laser_query: Query<(&mut Position, &Laser, &Phases<LaserMode>), Without<Player>>,
     player_query: Query<&Position, With<Player>>,
 ) {
     let player_position = player_query.single().vec;
     for (mut laser_position, laser, phases) in &mut laser_query {
-        if laser.mobile && matches!(phases.mode(), Mode::Ready) {
+        if laser.mobile && matches!(phases.mode(), LaserMode::Ready) {
             match laser.axis {
                 Axis::Horizontal => laser_position.vec.y = player_position.y,
                 Axis::Vertical => laser_position.vec.x = player_position.x,
@@ -144,7 +153,7 @@ fn movement(
 }
 
 fn attack(
-    laser_query: Query<(&Position, &Laser, &Phases), Without<Player>>,
+    laser_query: Query<(&Position, &Laser, &Phases<LaserMode>), Without<Player>>,
     mut player_query: Query<&Position, With<Player>>,
     mut state: ResMut<State<AppState>>,
 ) {
@@ -154,7 +163,7 @@ fn attack(
             Axis::Horizontal => laser_position.vec.y == player_position.vec.y,
             Axis::Vertical => laser_position.vec.x == player_position.vec.x,
         };
-        if matches!(phases.mode(), Mode::Shooting) && aligned {
+        if matches!(phases.mode(), LaserMode::Shooting) && aligned {
             state.overwrite_set(AppState::Defeat).unwrap();
         }
     }

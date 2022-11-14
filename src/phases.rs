@@ -7,40 +7,38 @@ use crate::background::Countdown;
 pub struct PhasesPlugin;
 
 impl Plugin for PhasesPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_system(phases);
-    }
+    fn build(&self, _: &mut App) {}
 }
 
 #[derive(Component)]
-pub struct Phases {
-    pub vec: Vec<Phase>,
+pub struct Phases<T: Default + Send + Sync + 'static> {
+    pub vec: Vec<Phase<T>>,
     pub start: Duration,
 }
 
-impl Phases {
-    pub fn new(vec: Vec<Phase>) -> Self {
+impl<T: Default + Clone + Copy + Send + Sync> Phases<T> {
+    pub fn new(vec: Vec<Phase<T>>) -> Self {
         Self {
             vec,
             start: Duration::ZERO,
         }
     }
 
-    pub fn mode(&self) -> Mode {
+    pub fn mode(&self) -> T {
         match self.vec.first() {
             Some(phase) => phase.mode,
-            None => Mode::Ready,
+            None => T::default(),
         }
     }
 }
 
-pub struct Phase {
-    pub mode: Mode,
+pub struct Phase<T> {
+    pub mode: T,
     pub duration: Duration,
 }
 
-impl Phase {
-    pub fn new(mode: Mode, seconds: f32) -> Self {
+impl<T> Phase<T> {
+    pub fn new(mode: T, seconds: f32) -> Self {
         Self {
             mode,
             duration: Duration::from_secs_f32(seconds),
@@ -48,14 +46,10 @@ impl Phase {
     }
 }
 
-#[derive(Clone, Copy)]
-pub enum Mode {
-    Ready,
-    Charging,
-    Shooting,
-}
-
-pub fn phases(mut query: Query<&mut Phases>, countdown: Res<Countdown>) {
+pub fn phases<T: Default + Send + Sync>(
+    mut query: Query<&mut Phases<T>>,
+    countdown: Res<Countdown>,
+) {
     for mut laser in &mut query {
         let duration = match laser.vec.first() {
             Some(phase) => phase.duration,
