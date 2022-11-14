@@ -30,6 +30,7 @@ impl Plugin for AppPlugin {
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 enum AppState {
     Setup,
+    Start,
     Game,
     Defeat,
     Victory,
@@ -64,7 +65,7 @@ fn setup(mut commands: Commands) {
 }
 
 fn enter_setup(mut state: ResMut<State<AppState>>) {
-    state.overwrite_set(AppState::Game).unwrap();
+    state.overwrite_set(AppState::Start).unwrap();
 }
 
 fn enter_teardown(mut state: ResMut<State<AppState>>) {

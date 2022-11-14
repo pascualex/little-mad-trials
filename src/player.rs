@@ -10,6 +10,11 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(SystemSet::on_enter(AppState::Setup).with_system(enter_setup))
+            .add_system_set(
+                SystemSet::on_update(AppState::Start)
+                    .with_system(start)
+                    .with_system(movement),
+            )
             .add_system_set(SystemSet::on_update(AppState::Game).with_system(movement))
             .add_system_set(SystemSet::on_enter(AppState::Teardown).with_system(enter_teardown));
     }
@@ -62,5 +67,12 @@ pub fn movement(
     let new_position = position.vec + direction;
     if board.tiles.contains(&new_position) {
         position.vec = new_position;
+    }
+}
+
+fn start(query: Query<&Position, With<Player>>, mut state: ResMut<State<AppState>>) {
+    let position = query.single();
+    if position.vec != IVec2::ZERO {
+        state.overwrite_set(AppState::Game).unwrap();
     }
 }

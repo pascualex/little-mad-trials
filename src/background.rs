@@ -6,9 +6,9 @@ pub struct BackgroundPlugin;
 
 impl Plugin for BackgroundPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(Countdown::new(20.8))
+        app.insert_resource(Countdown::new(20.0))
             .add_startup_system(setup)
-            .add_system_set(SystemSet::on_enter(AppState::Game).with_system(enter_game))
+            .add_system_set(SystemSet::on_enter(AppState::Start).with_system(enter_start))
             .add_system_set(SystemSet::on_update(AppState::Game).with_system(countdown))
             .add_system_set(SystemSet::on_enter(AppState::Defeat).with_system(enter_defeat))
             .add_system_set(SystemSet::on_enter(AppState::Victory).with_system(enter_victory));
@@ -52,7 +52,7 @@ fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
     let text = (
         TextBundle {
             text: Text::from_section(
-                "20",
+                "Uninitialized",
                 TextStyle {
                     font: asset_server.load("fonts/roboto.ttf"),
                     font_size: 24.0,
@@ -68,8 +68,10 @@ fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
     });
 }
 
-fn enter_game(mut countdown: ResMut<Countdown>) {
+fn enter_start(mut countdown: ResMut<Countdown>, mut query: Query<&mut Text, With<CountdownText>>) {
     countdown.timer.reset();
+    let mut text = query.single_mut();
+    text.sections[0].value = "Move!".to_string();
 }
 
 fn enter_defeat(mut query: Query<&mut Text, With<CountdownText>>) {
