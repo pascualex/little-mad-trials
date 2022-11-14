@@ -1,4 +1,4 @@
-use crate::laser::{Mode, Phase};
+use crate::phases::{Mode, Phase};
 
 pub fn moving_laser_phases() -> Vec<Phase> {
     vec![

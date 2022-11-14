@@ -1,8 +1,9 @@
 use bevy::prelude::*;
 
 use crate::{
-    laser::{self, Laser, Mode},
+    laser::Mode,
     palette,
+    phases::{self, Phases},
     player::Player,
 };
 
@@ -10,8 +11,8 @@ pub struct VisualsPlugin;
 
 impl Plugin for VisualsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(charge.after(laser::phase))
-            .add_system(attack.after(laser::phase));
+        app.add_system(charge.after(phases::phases))
+            .add_system(attack.after(phases::phases));
     }
 }
 
@@ -93,21 +94,21 @@ impl Visuals {
     }
 }
 
-fn charge(laser_query: Query<(&Laser, &Visuals)>, mut visibility_query: Query<&mut Visibility>) {
-    for (laser, models) in &laser_query {
+fn charge(laser_query: Query<(&Phases, &Visuals)>, mut visibility_query: Query<&mut Visibility>) {
+    for (phases, models) in &laser_query {
         let mut normal_visibility = visibility_query.get_mut(models.normal).unwrap();
-        normal_visibility.is_visible = !matches!(laser.mode(), Mode::Charging | Mode::Shooting);
+        normal_visibility.is_visible = !matches!(phases.mode(), Mode::Charging | Mode::Shooting);
         let mut charging_visibility = visibility_query.get_mut(models.charging).unwrap();
-        charging_visibility.is_visible = matches!(laser.mode(), Mode::Charging | Mode::Shooting);
+        charging_visibility.is_visible = matches!(phases.mode(), Mode::Charging | Mode::Shooting);
     }
 }
 
 fn attack(
-    laser_query: Query<(&Laser, &Visuals), Without<Player>>,
+    laser_query: Query<(&Phases, &Visuals), Without<Player>>,
     mut visibility_query: Query<&mut Visibility>,
 ) {
-    for (laser, visuals) in &laser_query {
+    for (phases, visuals) in &laser_query {
         let mut visibility = visibility_query.get_mut(visuals.ray).unwrap();
-        visibility.is_visible = matches!(laser.mode(), Mode::Shooting);
+        visibility.is_visible = matches!(phases.mode(), Mode::Shooting);
     }
 }

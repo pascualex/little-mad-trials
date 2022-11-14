@@ -1,20 +1,20 @@
-mod phases;
+mod content;
 mod visuals;
 
-use std::{f32::consts::PI, time::Duration};
+use std::f32::consts::PI;
 
 use bevy::prelude::*;
 
 use crate::{
-    background::Countdown,
     board::Position,
     palette,
+    phases::{self, Mode, Phase, Phases},
     player::{self, Player},
     AppState,
 };
 
 use self::{
-    phases::{lower_laser_phases, middle_laser_phases, moving_laser_phases, upper_laser_phases},
+    content::{lower_laser_phases, middle_laser_phases, moving_laser_phases, upper_laser_phases},
     visuals::{ray_blueprint, turrets_blueprint, Visuals, VisualsPlugin},
 };
 
@@ -27,10 +27,9 @@ impl Plugin for LaserPlugin {
             .add_system_set(SystemSet::on_enter(AppState::Teardown).with_system(enter_teardown))
             .add_system_set(
                 SystemSet::on_update(AppState::Game)
-                    .with_system(movement.after(phase))
+                    .with_system(movement.after(phases::phases))
                     .with_system(attack.after(movement).after(player::movement)),
-            )
-            .add_system(phase);
+            );
     }
 }
 
@@ -99,7 +98,8 @@ fn laser(
         ),
         VisibilityBundle::default(),
         Position::new(position),
-        Laser::new(axis, mobile, phases),
+        Phases::new(phases),
+        Laser::new(axis, mobile),
         Visuals::new(normal, charging, ray),
     );
     commands.spawn(root).push_children(&[normal, charging, ray]);
@@ -115,25 +115,11 @@ fn enter_teardown(query: Query<Entity, With<Laser>>, mut commands: Commands) {
 struct Laser {
     pub axis: Axis,
     pub mobile: bool,
-    pub phases: Vec<Phase>,
-    pub phase_start: Duration,
 }
 
 impl Laser {
-    pub fn new(axis: Axis, mobile: bool, phases: Vec<Phase>) -> Self {
-        Self {
-            axis,
-            mobile,
-            phases,
-            phase_start: Duration::ZERO,
-        }
-    }
-
-    pub fn mode(&self) -> Mode {
-        match self.phases.first() {
-            Some(phase) => phase.mode,
-            None => Mode::Ready,
-        }
+    pub fn new(axis: Axis, mobile: bool) -> Self {
+        Self { axis, mobile }
     }
 }
 
@@ -142,47 +128,13 @@ enum Axis {
     Vertical,
 }
 
-pub struct Phase {
-    pub mode: Mode,
-    pub duration: Duration,
-}
-
-impl Phase {
-    pub fn new(mode: Mode, seconds: f32) -> Self {
-        Self {
-            mode,
-            duration: Duration::from_secs_f32(seconds),
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
-pub enum Mode {
-    Ready,
-    Charging,
-    Shooting,
-}
-
-fn phase(mut query: Query<&mut Laser>, countdown: Res<Countdown>) {
-    for mut laser in &mut query {
-        let duration = match laser.phases.first() {
-            Some(phase) => phase.duration,
-            None => continue,
-        };
-        if countdown.timer.elapsed() >= laser.phase_start + duration {
-            laser.phase_start += duration;
-            laser.phases.remove(0);
-        }
-    }
-}
-
 fn movement(
-    mut laser_query: Query<(&mut Position, &Laser), Without<Player>>,
+    mut laser_query: Query<(&mut Position, &Laser, &Phases), Without<Player>>,
     player_query: Query<&Position, With<Player>>,
 ) {
     let player_position = player_query.single().vec;
-    for (mut laser_position, laser) in &mut laser_query {
-        if laser.mobile && matches!(laser.mode(), Mode::Ready) {
+    for (mut laser_position, laser, phases) in &mut laser_query {
+        if laser.mobile && matches!(phases.mode(), Mode::Ready) {
             match laser.axis {
                 Axis::Horizontal => laser_position.vec.y = player_position.y,
                 Axis::Vertical => laser_position.vec.x = player_position.x,
@@ -192,17 +144,17 @@ fn movement(
 }
 
 fn attack(
-    laser_query: Query<(&Position, &Laser), Without<Player>>,
+    laser_query: Query<(&Position, &Laser, &Phases), Without<Player>>,
     mut player_query: Query<&Position, With<Player>>,
     mut state: ResMut<State<AppState>>,
 ) {
     let player_position = player_query.single_mut();
-    for (laser_position, laser) in &laser_query {
+    for (laser_position, laser, phases) in &laser_query {
         let aligned = match laser.axis {
             Axis::Horizontal => laser_position.vec.y == player_position.vec.y,
             Axis::Vertical => laser_position.vec.x == player_position.vec.x,
         };
-        if matches!(laser.mode(), Mode::Shooting) && aligned {
+        if matches!(phases.mode(), Mode::Shooting) && aligned {
             state.overwrite_set(AppState::Defeat).unwrap();
         }
     }

@@ -2,6 +2,7 @@ mod background;
 mod board;
 mod laser;
 mod palette;
+mod phases;
 mod player;
 
 use background::BackgroundPlugin;
