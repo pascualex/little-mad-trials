@@ -18,9 +18,9 @@ pub struct Phases<T: Default + Send + Sync + 'static> {
 }
 
 impl<T: Default + Clone + Copy + Send + Sync> Phases<T> {
-    pub fn new(vec: Vec<Phase<T>>) -> Self {
+    pub fn new() -> Self {
         Self {
-            vec,
+            vec: Vec::new(),
             start: Duration::ZERO,
             progress: 0.0,
         }
@@ -31,6 +31,12 @@ impl<T: Default + Clone + Copy + Send + Sync> Phases<T> {
             Some(phase) => phase.mode,
             None => T::default(),
         }
+    }
+
+    pub fn reset(&mut self, vec: Vec<Phase<T>>) {
+        self.vec = vec;
+        self.start = Duration::ZERO;
+        self.progress = 0.0;
     }
 }
 

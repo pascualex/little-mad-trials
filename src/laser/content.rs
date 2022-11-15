@@ -1,6 +1,13 @@
-use crate::{laser::LaserMode, phases::Phase};
+use crate::{board::BoardMode, laser::LaserMode, phases::Phase};
 
-pub fn moving_laser_phases() -> Vec<Phase<LaserMode>> {
+pub fn mobile_laser_board_phases() -> Vec<Phase<BoardMode>> {
+    vec![
+        Phase::new(BoardMode::Shown, 20.0),  // 20.0
+        Phase::new(BoardMode::Exiting, 1.0), // 21.0
+    ]
+}
+
+pub fn mobile_laser_phases() -> Vec<Phase<LaserMode>> {
     vec![
         // first round (0.0)
         Phase::new(LaserMode::Charging, 0.2), // 0.2
@@ -60,6 +67,19 @@ pub fn moving_laser_phases() -> Vec<Phase<LaserMode>> {
     ]
 }
 
+pub fn upper_laser_board_phases() -> Vec<Phase<BoardMode>> {
+    vec![
+        Phase::new(BoardMode::Hidden, 3.4),   // 3.4
+        Phase::new(BoardMode::Entering, 1.0), // 4.4
+        Phase::new(BoardMode::Shown, 3.7),    // 8.1
+        Phase::new(BoardMode::Exiting, 1.0),  // 9.1
+        Phase::new(BoardMode::Hidden, 2.7),   // 11.8
+        Phase::new(BoardMode::Entering, 1.0), // 12.8
+        Phase::new(BoardMode::Shown, 7.2),    // 20.0
+        Phase::new(BoardMode::Exiting, 1.0),  // 21.0
+    ]
+}
+
 pub fn upper_laser_phases() -> Vec<Phase<LaserMode>> {
     vec![
         Phase::new(LaserMode::Ready, 4.4), // 4.4
@@ -79,6 +99,19 @@ pub fn upper_laser_phases() -> Vec<Phase<LaserMode>> {
     ]
 }
 
+pub fn middle_laser_board_phases() -> Vec<Phase<BoardMode>> {
+    vec![
+        Phase::new(BoardMode::Hidden, 4.9),   // 4.9
+        Phase::new(BoardMode::Entering, 1.0), // 5.9
+        Phase::new(BoardMode::Shown, 0.7),    // 6.6
+        Phase::new(BoardMode::Exiting, 1.0),  // 7.6
+        Phase::new(BoardMode::Hidden, 4.2),   // 11.8
+        Phase::new(BoardMode::Entering, 1.0), // 12.8
+        Phase::new(BoardMode::Shown, 2.7),    // 14.5
+        Phase::new(BoardMode::Exiting, 1.0),  // 15.5
+    ]
+}
+
 pub fn middle_laser_phases() -> Vec<Phase<LaserMode>> {
     vec![
         Phase::new(LaserMode::Ready, 4.4),
@@ -93,6 +126,19 @@ pub fn middle_laser_phases() -> Vec<Phase<LaserMode>> {
         Phase::new(LaserMode::Ready, 0.3),    // 13.8
         Phase::new(LaserMode::Charging, 0.5), // 14.3
         Phase::new(LaserMode::Shooting, 0.2), // 14.5
+    ]
+}
+
+pub fn lower_laser_board_phases() -> Vec<Phase<BoardMode>> {
+    vec![
+        Phase::new(BoardMode::Hidden, 3.4),   // 3.4
+        Phase::new(BoardMode::Entering, 1.0), // 4.4
+        Phase::new(BoardMode::Shown, 3.7),    // 8.1
+        Phase::new(BoardMode::Exiting, 1.0),  // 9.1
+        Phase::new(BoardMode::Hidden, 3.7),   // 12.8
+        Phase::new(BoardMode::Entering, 1.0), // 13.8
+        Phase::new(BoardMode::Shown, 6.2),    // 20.0
+        Phase::new(BoardMode::Exiting, 1.0),  // 21.0
     ]
 }
 

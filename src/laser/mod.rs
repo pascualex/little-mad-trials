@@ -8,13 +8,17 @@ use bevy::prelude::*;
 use crate::{
     board::{BoardMode, Position},
     palette,
-    phases::{self, Phase, Phases},
+    phases::{self, Phases},
     player::{self, Player},
     AppState,
 };
 
 use self::{
-    content::{lower_laser_phases, middle_laser_phases, moving_laser_phases, upper_laser_phases},
+    content::{
+        lower_laser_board_phases, lower_laser_phases, middle_laser_board_phases,
+        middle_laser_phases, mobile_laser_board_phases, mobile_laser_phases,
+        upper_laser_board_phases, upper_laser_phases,
+    },
     visuals::{ray_blueprint, turrets_blueprint, Visuals, VisualsPlugin},
 };
 
@@ -23,8 +27,8 @@ pub struct LaserPlugin;
 impl Plugin for LaserPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(VisualsPlugin)
+            .add_startup_system(setup)
             .add_system_set(SystemSet::on_enter(AppState::Setup).with_system(enter_setup))
-            .add_system_set(SystemSet::on_enter(AppState::Teardown).with_system(enter_teardown))
             .add_system_set(
                 SystemSet::on_update(AppState::Game)
                     .with_system(movement.after(phases::transition::<LaserMode>))
@@ -34,73 +38,39 @@ impl Plugin for LaserPlugin {
     }
 }
 
-fn enter_setup(
+fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     laser(
         IVec2::ZERO,
-        Laser::new(Axis::Vertical, true),
-        vec![
-            Phase::new(BoardMode::Shown, 20.0),  // 20.0
-            Phase::new(BoardMode::Exiting, 1.0), // 21.0
-        ],
-        moving_laser_phases(),
+        Axis::Vertical,
+        true,
         &mut commands,
         &mut meshes,
         &mut materials,
     );
     laser(
         IVec2::new(0, 1),
-        Laser::new(Axis::Horizontal, false),
-        vec![
-            Phase::new(BoardMode::Hidden, 3.4),   // 3.4
-            Phase::new(BoardMode::Entering, 1.0), // 4.4
-            Phase::new(BoardMode::Shown, 3.7),    // 8.1
-            Phase::new(BoardMode::Exiting, 1.0),  // 9.1
-            Phase::new(BoardMode::Hidden, 2.7),   // 11.8
-            Phase::new(BoardMode::Entering, 1.0), // 12.8
-            Phase::new(BoardMode::Shown, 7.2),    // 20.0
-            Phase::new(BoardMode::Exiting, 1.0),  // 21.0
-        ],
-        upper_laser_phases(),
+        Axis::Horizontal,
+        false,
         &mut commands,
         &mut meshes,
         &mut materials,
     );
     laser(
         IVec2::new(0, 0),
-        Laser::new(Axis::Horizontal, false),
-        vec![
-            Phase::new(BoardMode::Hidden, 4.9),   // 4.9
-            Phase::new(BoardMode::Entering, 1.0), // 5.9
-            Phase::new(BoardMode::Shown, 0.7),    // 6.6
-            Phase::new(BoardMode::Exiting, 1.0),  // 7.6
-            Phase::new(BoardMode::Hidden, 4.2),   // 11.8
-            Phase::new(BoardMode::Entering, 1.0), // 12.8
-            Phase::new(BoardMode::Shown, 2.7),    // 14.5
-            Phase::new(BoardMode::Exiting, 1.0),  // 15.5
-        ],
-        middle_laser_phases(),
+        Axis::Horizontal,
+        false,
         &mut commands,
         &mut meshes,
         &mut materials,
     );
     laser(
         IVec2::new(0, -1),
-        Laser::new(Axis::Horizontal, false),
-        vec![
-            Phase::new(BoardMode::Hidden, 3.4),   // 3.4
-            Phase::new(BoardMode::Entering, 1.0), // 4.4
-            Phase::new(BoardMode::Shown, 3.7),    // 8.1
-            Phase::new(BoardMode::Exiting, 1.0),  // 9.1
-            Phase::new(BoardMode::Hidden, 3.7),   // 12.8
-            Phase::new(BoardMode::Entering, 1.0), // 13.8
-            Phase::new(BoardMode::Shown, 6.2),    // 20.0
-            Phase::new(BoardMode::Exiting, 1.0),  // 21.0
-        ],
-        lower_laser_phases(),
+        Axis::Horizontal,
+        false,
         &mut commands,
         &mut meshes,
         &mut materials,
@@ -109,14 +79,13 @@ fn enter_setup(
 
 fn laser(
     position: IVec2,
-    laser: Laser,
-    board_phases: Vec<Phase<BoardMode>>,
-    laser_phases: Vec<Phase<LaserMode>>,
+    axis: Axis,
+    mobile: bool,
     commands: &mut Commands,
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<StandardMaterial>,
 ) {
-    let rotation = match laser.axis {
+    let rotation = match axis {
         Axis::Horizontal => PI / 2.0,
         Axis::Vertical => 0.0,
     };
@@ -133,19 +102,48 @@ fn laser(
         TransformBundle::default(),
         VisibilityBundle::default(),
         Position::new(position),
-        laser,
+        Laser::new(axis, mobile),
         Visuals::new(normal, charging, ray),
-        Phases::new(board_phases),
-        Phases::new(laser_phases),
+        Phases::<BoardMode>::new(),
+        Phases::<LaserMode>::new(),
     );
     commands.spawn(root).with_children(|builder| {
         builder.spawn(model).push_children(&[normal, charging, ray]);
     });
 }
 
-fn enter_teardown(query: Query<Entity, With<Laser>>, mut commands: Commands) {
-    for entity in &query {
-        commands.entity(entity).despawn_recursive();
+fn enter_setup(
+    mut query: Query<(
+        &mut Position,
+        &Laser,
+        &mut Phases<BoardMode>,
+        &mut Phases<LaserMode>,
+    )>,
+) {
+    for (mut position, laser, mut board_phases, mut laser_phases) in &mut query {
+        if laser.mobile {
+            position.vec = IVec2::ZERO;
+        };
+        let vec = match laser.mobile {
+            true => mobile_laser_board_phases(),
+            false => match position.vec.y {
+                1 => upper_laser_board_phases(),
+                0 => middle_laser_board_phases(),
+                -1 => lower_laser_board_phases(),
+                _ => unreachable!(),
+            },
+        };
+        board_phases.reset(vec);
+        let vec = match laser.mobile {
+            true => mobile_laser_phases(),
+            false => match position.vec.y {
+                1 => upper_laser_phases(),
+                0 => middle_laser_phases(),
+                -1 => lower_laser_phases(),
+                _ => unreachable!(),
+            },
+        };
+        laser_phases.reset(vec);
     }
 }
 
