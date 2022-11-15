@@ -8,7 +8,7 @@ use bevy::prelude::*;
 use crate::{
     board::{BoardMode, Position},
     palette,
-    phases::{self, Phases},
+    phases::{self, Phase, Phases},
     player::{self, Player},
     AppState,
 };
@@ -29,6 +29,7 @@ impl Plugin for LaserPlugin {
         app.add_plugin(VisualsPlugin)
             .add_startup_system(setup)
             .add_system_set(SystemSet::on_enter(AppState::Setup).with_system(enter_setup))
+            .add_system_set(SystemSet::on_enter(AppState::Start).with_system(enter_start))
             .add_system_set(
                 SystemSet::on_update(AppState::Game)
                     .with_system(movement.after(phases::transition::<LaserMode>))
@@ -124,6 +125,31 @@ fn enter_setup(
         if laser.mobile {
             position.vec = IVec2::ZERO;
         };
+        let vec = match laser.mobile {
+            true => vec![
+                Phase::new(BoardMode::Entering, 1.0), // 1.0
+                Phase::new(BoardMode::Shown, 0.0),    // final
+            ],
+            false => vec![
+                Phase::new(BoardMode::Hidden, 0.0), // final
+            ],
+        };
+        board_phases.reset(vec);
+        laser_phases.reset(vec![
+            Phase::new(LaserMode::Ready, 0.0), // final
+        ]);
+    }
+}
+
+fn enter_start(
+    mut query: Query<(
+        &Position,
+        &Laser,
+        &mut Phases<BoardMode>,
+        &mut Phases<LaserMode>,
+    )>,
+) {
+    for (position, laser, mut board_phases, mut laser_phases) in &mut query {
         let vec = match laser.mobile {
             true => mobile_laser_board_phases(),
             false => match position.vec.y {

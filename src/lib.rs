@@ -20,7 +20,6 @@ impl Plugin for AppPlugin {
             .add_plugin(PlayerPlugin)
             .add_plugin(LaserPlugin)
             .add_startup_system(setup)
-            .add_system_set(SystemSet::on_enter(AppState::Setup).with_system(enter_setup))
             .add_system_set(SystemSet::on_update(AppState::Game).with_system(instant_victory))
             .add_system_set(SystemSet::on_update(AppState::Defeat).with_system(restart))
             .add_system_set(SystemSet::on_update(AppState::Victory).with_system(restart))
@@ -29,7 +28,7 @@ impl Plugin for AppPlugin {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
-enum AppState {
+pub enum AppState {
     Setup,
     Start,
     Game,
@@ -63,10 +62,6 @@ fn setup(mut commands: Commands) {
         },
         ..default()
     });
-}
-
-fn enter_setup(mut state: ResMut<State<AppState>>) {
-    state.overwrite_set(AppState::Start).unwrap();
 }
 
 fn enter_teardown(mut state: ResMut<State<AppState>>) {

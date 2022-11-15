@@ -10,12 +10,18 @@ impl Plugin for BackgroundPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Countdown::new())
             .add_startup_system(setup)
+            .add_system_set(SystemSet::on_enter(AppState::Setup).with_system(enter_setup))
+            .add_system_set(
+                SystemSet::on_update(AppState::Setup)
+                    .with_system(countdown)
+                    .with_system(transition),
+            )
             .add_system_set(SystemSet::on_enter(AppState::Start).with_system(enter_start))
             .add_system_set(
                 SystemSet::on_update(AppState::Game)
                     .with_system(countdown)
                     .with_system(show_countdown)
-                    .with_system(victory),
+                    .with_system(transition),
             )
             .add_system_set(SystemSet::on_enter(AppState::Defeat).with_system(enter_defeat))
             .add_system_set(SystemSet::on_enter(AppState::Victory).with_system(enter_victory));
@@ -75,8 +81,14 @@ fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
     });
 }
 
+fn enter_setup(mut countdown: ResMut<Countdown>, mut query: Query<&mut Text, With<CountdownText>>) {
+    countdown.reset(1.0, Some(AppState::Start));
+    let mut text = query.single_mut();
+    text.sections[0].value = "Setup".to_string();
+}
+
 fn enter_start(mut countdown: ResMut<Countdown>, mut query: Query<&mut Text, With<CountdownText>>) {
-    countdown.reset(20.0);
+    countdown.reset(20.0, Some(AppState::Victory));
     let mut text = query.single_mut();
     text.sections[0].value = "Move!".to_string();
 }
@@ -94,18 +106,21 @@ fn enter_victory(mut query: Query<&mut Text, With<CountdownText>>) {
 #[derive(Resource)]
 pub struct Countdown {
     pub timer: Timer,
+    pub transition: Option<AppState>,
 }
 
 impl Countdown {
     pub fn new() -> Self {
         Self {
             timer: Timer::from_seconds(0.0, TimerMode::Once),
+            transition: None,
         }
     }
 
-    pub fn reset(&mut self, seconds: f32) {
+    pub fn reset(&mut self, seconds: f32, transition: Option<AppState>) {
         self.timer.set_duration(Duration::from_secs_f32(seconds));
         self.timer.reset();
+        self.transition = transition;
     }
 }
 
@@ -121,8 +136,11 @@ fn show_countdown(mut query: Query<&mut Text, With<CountdownText>>, countdown: R
     text.sections[0].value = format!("{:.1}", remaining.as_secs_f32());
 }
 
-fn victory(countdown: ResMut<Countdown>, mut state: ResMut<State<AppState>>) {
+fn transition(countdown: Res<Countdown>, mut state: ResMut<State<AppState>>) {
+    let Some(transition) = countdown.transition else {
+        return;
+    };
     if countdown.timer.finished() {
-        state.overwrite_set(AppState::Victory).unwrap();
+        state.overwrite_set(transition).unwrap();
     }
 }
