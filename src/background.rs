@@ -89,7 +89,7 @@ fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
 }
 
 fn enter_setup(mut countdown: ResMut<Countdown>, mut query: Query<&mut Text, With<CountdownText>>) {
-    countdown.reset(1.0, Some(AppState::Start));
+    countdown.reset(1.5, Some(AppState::Start));
     let mut text = query.single_mut();
     text.sections[0].value = "Setup".to_string();
 }
@@ -118,7 +118,7 @@ fn enter_teardown(
     mut countdown: ResMut<Countdown>,
     mut query: Query<&mut Text, With<CountdownText>>,
 ) {
-    countdown.reset(1.0, Some(AppState::Setup));
+    countdown.reset(1.5, Some(AppState::Setup));
     let mut text = query.single_mut();
     text.sections[0].value = "Teardown".to_string();
 }

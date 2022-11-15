@@ -60,20 +60,24 @@ fn setup(
     }
 }
 
-fn enter_setup(mut query: Query<&mut Phases<BoardMode>, With<Tile>>) {
-    for mut phases in &mut query {
+fn enter_setup(mut query: Query<(&Transform, &mut Phases<BoardMode>), With<Tile>>) {
+    for (transform, mut phases) in &mut query {
+        let offset = transform.translation.x + transform.translation.z;
         phases.reset(vec![
-            Phase::new(BoardMode::Entering, 1.0), // 1.0
-            Phase::new(BoardMode::Shown, 0.0),    // final
+            Phase::new(BoardMode::Waiting, 0.4 + offset as f32 * 0.05),
+            Phase::new(BoardMode::Entering, 1.0),
+            Phase::new(BoardMode::Shown, 0.0), // final
         ]);
     }
 }
 
-fn enter_teardown(mut query: Query<&mut Phases<BoardMode>, With<Tile>>) {
-    for mut phases in &mut query {
+fn enter_teardown(mut query: Query<(&Transform, &mut Phases<BoardMode>), With<Tile>>) {
+    for (transform, mut phases) in &mut query {
+        let offset = transform.translation.x + transform.translation.z;
         phases.reset(vec![
-            Phase::new(BoardMode::Exiting, 1.0), // 1.0
-            Phase::new(BoardMode::Hidden, 0.0),  // final
+            Phase::new(BoardMode::Waiting, 0.1 + offset as f32 * 0.05),
+            Phase::new(BoardMode::Exiting, 1.0),
+            Phase::new(BoardMode::Hidden, 0.0), // final
         ]);
     }
 }
@@ -97,6 +101,7 @@ pub enum BoardMode {
     Entering,
     Shown,
     Exiting,
+    Waiting,
 }
 
 impl Position {
@@ -126,6 +131,7 @@ fn to_world_y(mut query: Query<(&mut Transform, &Phases<BoardMode>)>) {
             BoardMode::Entering => f32::max(HIDDEN_HEIGHT * (1.0 - phases.progress), y),
             BoardMode::Shown => 0.0,
             BoardMode::Exiting => f32::min(HIDDEN_HEIGHT * phases.progress, y),
+            BoardMode::Waiting => y,
         };
     }
 }

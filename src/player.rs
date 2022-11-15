@@ -81,17 +81,20 @@ fn enter_setup(
     let (mut position, mut phases) = query.single_mut();
     position.vec = IVec2::ZERO;
     phases.reset(vec![
-        Phase::new(BoardMode::Entering, 1.0), // 1.0
+        Phase::new(BoardMode::Waiting, 0.4),  // 0.4
+        Phase::new(BoardMode::Entering, 1.0), // 1.4
         Phase::new(BoardMode::Shown, 0.0),    // final
     ]);
     health.dead = false;
 }
 
-fn enter_teardown(mut query: Query<&mut Phases<BoardMode>, With<Player>>) {
-    let mut phases = query.single_mut();
+fn enter_teardown(mut query: Query<(&Position, &mut Phases<BoardMode>), With<Player>>) {
+    let (position, mut phases) = query.single_mut();
+    let offset = position.vec.x - position.vec.y;
     phases.reset(vec![
-        Phase::new(BoardMode::Exiting, 1.0), // 1.0
-        Phase::new(BoardMode::Hidden, 0.0),  // final
+        Phase::new(BoardMode::Waiting, 0.1 + offset as f32 * 0.05),
+        Phase::new(BoardMode::Exiting, 1.0),
+        Phase::new(BoardMode::Hidden, 0.0), // final
     ]);
 }
 
