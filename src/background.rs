@@ -14,14 +14,14 @@ impl Plugin for BackgroundPlugin {
             .add_system_set(
                 SystemSet::on_update(AppState::Setup)
                     .with_system(countdown)
-                    .with_system(transition),
+                    .with_system(transition.after(countdown)),
             )
             .add_system_set(SystemSet::on_enter(AppState::Start).with_system(enter_start))
             .add_system_set(
                 SystemSet::on_update(AppState::Game)
                     .with_system(countdown)
-                    .with_system(show_countdown)
-                    .with_system(transition),
+                    .with_system(show_countdown.after(countdown))
+                    .with_system(transition.after(countdown)),
             )
             .add_system_set(SystemSet::on_enter(AppState::Defeat).with_system(enter_defeat))
             .add_system_set(SystemSet::on_enter(AppState::Victory).with_system(enter_victory))
@@ -29,7 +29,7 @@ impl Plugin for BackgroundPlugin {
             .add_system_set(
                 SystemSet::on_update(AppState::Teardown)
                     .with_system(countdown)
-                    .with_system(transition),
+                    .with_system(transition.after(countdown)),
             );
     }
 }

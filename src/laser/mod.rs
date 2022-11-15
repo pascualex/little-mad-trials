@@ -10,7 +10,7 @@ use crate::{
     board::{BoardMode, Position, HIDDEN_HEIGHT},
     palette,
     phases::{self, Phase, Phases},
-    player::{self, Player},
+    player::{self, Health, Player},
     AppState,
 };
 
@@ -107,8 +107,8 @@ fn laser(
         Position::new(position),
         Laser::new(axis, mobile),
         Visuals::new(normal, charging, ray),
-        Phases::<BoardMode>::new(BoardMode::Hidden),
-        Phases::<LaserMode>::new(LaserMode::Ready),
+        Phases::new(BoardMode::Hidden),
+        Phases::new(LaserMode::Ready),
     );
     commands.spawn(root).with_children(|builder| {
         builder.spawn(model).push_children(&[normal, charging, ray]);
@@ -188,7 +188,7 @@ fn enter_teardown(mut query: Query<(&mut Phases<BoardMode>, &mut Phases<LaserMod
 }
 
 #[derive(Component)]
-struct Laser {
+pub struct Laser {
     pub axis: Axis,
     pub mobile: bool,
 }
@@ -199,7 +199,7 @@ impl Laser {
     }
 }
 
-enum Axis {
+pub enum Axis {
     Horizontal,
     Vertical,
 }
@@ -226,10 +226,10 @@ fn movement(
     }
 }
 
-fn attack(
+pub fn attack(
     laser_query: Query<(&Position, &Laser, &Phases<LaserMode>), Without<Player>>,
     mut player_query: Query<&Position, With<Player>>,
-    mut state: ResMut<State<AppState>>,
+    mut health: ResMut<Health>,
 ) {
     let player_position = player_query.single_mut();
     for (laser_position, laser, phases) in &laser_query {
@@ -238,7 +238,7 @@ fn attack(
             Axis::Vertical => laser_position.vec.x == player_position.vec.x,
         };
         if matches!(phases.mode(), LaserMode::Shooting) && aligned {
-            state.overwrite_set(AppState::Defeat).unwrap();
+            health.dead = true;
         }
     }
 }

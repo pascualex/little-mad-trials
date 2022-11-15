@@ -50,7 +50,7 @@ fn setup(
                 )),
                 VisibilityBundle::default(),
                 Tile,
-                Phases::<BoardMode>::new(BoardMode::Hidden),
+                Phases::new(BoardMode::Hidden),
             );
             commands.spawn(root).with_children(|builder| {
                 builder.spawn(model.clone());

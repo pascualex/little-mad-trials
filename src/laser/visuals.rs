@@ -99,12 +99,11 @@ fn charge(
     mut visibility_query: Query<&mut Visibility>,
 ) {
     for (phases, models) in &laser_query {
+        let charging = matches!(phases.mode(), LaserMode::Charging | LaserMode::Shooting);
         let mut normal_visibility = visibility_query.get_mut(models.normal).unwrap();
-        normal_visibility.is_visible =
-            !matches!(phases.mode(), LaserMode::Charging | LaserMode::Shooting);
+        normal_visibility.is_visible = !charging;
         let mut charging_visibility = visibility_query.get_mut(models.charging).unwrap();
-        charging_visibility.is_visible =
-            matches!(phases.mode(), LaserMode::Charging | LaserMode::Shooting);
+        charging_visibility.is_visible = charging;
     }
 }
 
