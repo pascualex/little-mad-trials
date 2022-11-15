@@ -6,6 +6,7 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 
 use crate::{
+    background,
     board::{BoardMode, Position, HIDDEN_HEIGHT},
     palette,
     phases::{self, Phase, Phases},
@@ -36,7 +37,7 @@ impl Plugin for LaserPlugin {
                     .with_system(attack.after(movement).after(player::movement)),
             )
             .add_system_set(SystemSet::on_enter(AppState::Teardown).with_system(enter_teardown))
-            .add_system(phases::transition::<LaserMode>);
+            .add_system(phases::transition::<LaserMode>.after(background::countdown));
     }
 }
 
@@ -106,8 +107,8 @@ fn laser(
         Position::new(position),
         Laser::new(axis, mobile),
         Visuals::new(normal, charging, ray),
-        Phases::<BoardMode>::new(),
-        Phases::<LaserMode>::new(),
+        Phases::<BoardMode>::new(BoardMode::Hidden),
+        Phases::<LaserMode>::new(LaserMode::Ready),
     );
     commands.spawn(root).with_children(|builder| {
         builder.spawn(model).push_children(&[normal, charging, ray]);
@@ -203,9 +204,8 @@ enum Axis {
     Vertical,
 }
 
-#[derive(Default, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub enum LaserMode {
-    #[default]
     Ready,
     Charging,
     Shooting,

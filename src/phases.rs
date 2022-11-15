@@ -17,10 +17,10 @@ pub struct Phases<T: Send + Sync + 'static> {
     pub progress: f32,
 }
 
-impl<T: Default + Clone + Copy + Send + Sync> Phases<T> {
-    pub fn new() -> Self {
+impl<T: Clone + Copy + Send + Sync> Phases<T> {
+    pub fn new(base: T) -> Self {
         Self {
-            vec: vec![Phase::new(T::default(), 0.0)],
+            vec: vec![Phase::new(base, 0.0)],
             start: Duration::ZERO,
             progress: 0.0,
         }
@@ -54,10 +54,7 @@ impl<T> Phase<T> {
     }
 }
 
-pub fn transition<T: Default + Send + Sync>(
-    mut query: Query<&mut Phases<T>>,
-    countdown: Res<Countdown>,
-) {
+pub fn transition<T: Send + Sync>(mut query: Query<&mut Phases<T>>, countdown: Res<Countdown>) {
     for mut phases in &mut query {
         if phases.vec.len() <= 1 {
             continue;

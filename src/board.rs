@@ -1,8 +1,9 @@
 use bevy::{prelude::*, utils::HashSet};
 
 use crate::{
-    palette,
-    phases::{self, Phases},
+    background, palette,
+    phases::{self, Phase, Phases},
+    AppState,
 };
 
 pub const HIDDEN_HEIGHT: f32 = -3.0;
@@ -13,7 +14,9 @@ impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Board>()
             .add_startup_system(setup)
-            .add_system(phases::transition::<BoardMode>)
+            .add_system_set(SystemSet::on_enter(AppState::Setup).with_system(enter_setup))
+            .add_system_set(SystemSet::on_enter(AppState::Teardown).with_system(enter_teardown))
+            .add_system(phases::transition::<BoardMode>.after(background::countdown))
             .add_system(to_world_xz)
             .add_system(to_world_y.after(phases::transition::<BoardMode>));
     }
@@ -25,22 +28,53 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    let model = MaterialMeshBundle {
+        mesh: meshes.add(Mesh::from(shape::Box::new(0.92, 4.0, 0.92))),
+        material: materials.add(StandardMaterial {
+            base_color: palette::LIGHT_WHITE,
+            metallic: 0.1,
+            perceptual_roughness: 0.7,
+            reflectance: 0.3,
+            ..default()
+        }),
+        transform: Transform::from_xyz(0.0, -2.0, 0.0),
+        ..default()
+    };
     for i in -1..=1 {
         for j in -1..=1 {
-            commands.spawn(MaterialMeshBundle {
-                mesh: meshes.add(Mesh::from(shape::Box::new(0.92, 4.0, 0.92))),
-                material: materials.add(StandardMaterial {
-                    base_color: palette::LIGHT_WHITE,
-                    metallic: 0.1,
-                    perceptual_roughness: 0.7,
-                    reflectance: 0.3,
-                    ..default()
-                }),
-                transform: Transform::from_xyz(j as f32, -2.0, -i as f32),
-                ..default()
+            let root = (
+                TransformBundle::from_transform(Transform::from_xyz(
+                    j as f32,
+                    HIDDEN_HEIGHT,
+                    -i as f32,
+                )),
+                VisibilityBundle::default(),
+                Tile,
+                Phases::<BoardMode>::new(BoardMode::Hidden),
+            );
+            commands.spawn(root).with_children(|builder| {
+                builder.spawn(model.clone());
             });
             board.tiles.insert(IVec2::new(j, i));
         }
+    }
+}
+
+fn enter_setup(mut query: Query<&mut Phases<BoardMode>, With<Tile>>) {
+    for mut phases in &mut query {
+        phases.reset(vec![
+            Phase::new(BoardMode::Entering, 1.0), // 1.0
+            Phase::new(BoardMode::Shown, 0.0),    // final
+        ]);
+    }
+}
+
+fn enter_teardown(mut query: Query<&mut Phases<BoardMode>, With<Tile>>) {
+    for mut phases in &mut query {
+        phases.reset(vec![
+            Phase::new(BoardMode::Exiting, 1.0), // 1.0
+            Phase::new(BoardMode::Hidden, 0.0),  // final
+        ]);
     }
 }
 
@@ -54,9 +88,11 @@ pub struct Position {
     pub vec: IVec2,
 }
 
-#[derive(Default, Clone, Copy)]
+#[derive(Component)]
+pub struct Tile;
+
+#[derive(Clone, Copy)]
 pub enum BoardMode {
-    #[default]
     Hidden,
     Entering,
     Shown,

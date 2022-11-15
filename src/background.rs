@@ -141,7 +141,7 @@ impl Countdown {
 
 #[derive(Component)]
 struct CountdownText;
-fn countdown(mut countdown: ResMut<Countdown>, time: Res<Time>) {
+pub fn countdown(mut countdown: ResMut<Countdown>, time: Res<Time>) {
     countdown.timer.tick(time.delta());
 }
 
