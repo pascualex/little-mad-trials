@@ -16,7 +16,8 @@ impl Plugin for PlayerPlugin {
                     .with_system(start_trigger)
                     .with_system(movement),
             )
-            .add_system_set(SystemSet::on_update(AppState::Game).with_system(movement));
+            .add_system_set(SystemSet::on_update(AppState::Game).with_system(movement))
+            .add_system_set(SystemSet::on_update(AppState::Victory).with_system(movement));
     }
 }
 

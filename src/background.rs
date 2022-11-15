@@ -9,10 +9,14 @@ impl Plugin for BackgroundPlugin {
         app.insert_resource(Countdown::new(20.01)) // 0.01 to avoid roundoff errors
             .add_startup_system(setup)
             .add_system_set(SystemSet::on_enter(AppState::Start).with_system(enter_start))
-            .add_system_set(SystemSet::on_update(AppState::Game).with_system(countdown))
+            .add_system_set(
+                SystemSet::on_update(AppState::Game)
+                    .with_system(countdown)
+                    .with_system(show_countdown)
+                    .with_system(victory),
+            )
             .add_system_set(SystemSet::on_enter(AppState::Defeat).with_system(enter_defeat))
-            .add_system_set(SystemSet::on_enter(AppState::Victory).with_system(enter_victory))
-            .add_system_set(SystemSet::on_update(AppState::Victory).with_system(countdown));
+            .add_system_set(SystemSet::on_enter(AppState::Victory).with_system(enter_victory));
     }
 }
 
@@ -101,16 +105,17 @@ impl Countdown {
 #[derive(Component)]
 struct CountdownText;
 
-fn countdown(
-    mut query: Query<&mut Text, With<CountdownText>>,
-    mut countdown: ResMut<Countdown>,
-    time: Res<Time>,
-    mut state: ResMut<State<AppState>>,
-) {
-    let mut text = query.single_mut();
+fn countdown(mut countdown: ResMut<Countdown>, time: Res<Time>) {
     countdown.timer.tick(time.delta());
+}
+
+fn show_countdown(mut query: Query<&mut Text, With<CountdownText>>, countdown: Res<Countdown>) {
+    let mut text = query.single_mut();
     let remaining = countdown.timer.duration() - countdown.timer.elapsed();
     text.sections[0].value = format!("{:.1}", remaining.as_secs_f32());
+}
+
+fn victory(countdown: ResMut<Countdown>, mut state: ResMut<State<AppState>>) {
     if countdown.timer.finished() {
         state.overwrite_set(AppState::Victory).unwrap();
     }
