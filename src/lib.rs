@@ -6,7 +6,7 @@ mod phases;
 mod player;
 
 use background::BackgroundPlugin;
-use bevy::prelude::*;
+use bevy::{core_pipeline::fxaa::Fxaa, prelude::*};
 
 use self::{board::BoardPlugin, laser::LaserPlugin, player::PlayerPlugin};
 
@@ -39,10 +39,13 @@ pub enum AppState {
 }
 
 fn setup(mut commands: Commands) {
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(5.0, 15.0, 15.0).looking_at(Vec3::ZERO, Vec3::Y),
-        ..default()
-    });
+    commands.spawn((
+        Camera3dBundle {
+            transform: Transform::from_xyz(5.0, 15.0, 15.0).looking_at(Vec3::ZERO, Vec3::Y),
+            ..default()
+        },
+        Fxaa::default(),
+    ));
     for i in [-6.0, 4.0] {
         for j in [-6.0, 4.0] {
             commands.spawn(DirectionalLightBundle {
