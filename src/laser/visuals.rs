@@ -1,4 +1,7 @@
-use bevy::prelude::*;
+use bevy::{
+    pbr::{NotShadowCaster, NotShadowReceiver},
+    prelude::*,
+};
 
 use crate::{
     laser::LaserMode,
@@ -61,19 +64,23 @@ pub fn ray_blueprint(
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<StandardMaterial>,
 ) -> Entity {
-    let root = MaterialMeshBundle {
-        mesh: meshes.add(Mesh::from(shape::Box::new(0.1, 0.1, 4.0))),
-        material: materials.add(StandardMaterial {
-            base_color: palette::DARK_RED,
-            metallic: 0.1,
-            perceptual_roughness: 0.7,
-            reflectance: 0.3,
+    let root = (
+        MaterialMeshBundle {
+            mesh: meshes.add(Mesh::from(shape::Box::new(0.1, 0.1, 4.0))),
+            material: materials.add(StandardMaterial {
+                base_color: palette::DARK_RED,
+                metallic: 0.1,
+                perceptual_roughness: 0.7,
+                reflectance: 0.3,
+                ..default()
+            }),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+            visibility: Visibility { is_visible: false },
             ..default()
-        }),
-        transform: Transform::from_xyz(0.0, 0.0, 0.0),
-        visibility: Visibility { is_visible: false },
-        ..default()
-    };
+        },
+        NotShadowCaster,
+        NotShadowReceiver,
+    );
     commands.spawn(root).id()
 }
 

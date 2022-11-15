@@ -10,6 +10,8 @@ use bevy::prelude::*;
 
 use self::{board::BoardPlugin, laser::LaserPlugin, player::PlayerPlugin};
 
+const SHADOW_SIZE: f32 = 11.0;
+
 pub struct AppPlugin;
 
 impl Plugin for AppPlugin {
@@ -41,26 +43,29 @@ fn setup(mut commands: Commands) {
         transform: Transform::from_xyz(5.0, 15.0, 15.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     });
-    let size = 11.0;
-    commands.spawn(DirectionalLightBundle {
-        transform: Transform::from_translation(Vec3::ZERO)
-            .looking_at(Vec3::new(-1.0, -3.0, -2.0), Vec3::Y),
-        directional_light: DirectionalLight {
-            illuminance: 32_000.0,
-            shadows_enabled: true,
-            shadow_projection: OrthographicProjection {
-                left: -size,
-                right: size,
-                bottom: -size,
-                top: size,
-                near: -size,
-                far: size,
+    for i in [-6.0, 4.0] {
+        for j in [-6.0, 4.0] {
+            commands.spawn(DirectionalLightBundle {
+                transform: Transform::from_translation(Vec3::ZERO)
+                    .looking_at(Vec3::new(j, -6.0, i), Vec3::Y),
+                directional_light: DirectionalLight {
+                    illuminance: 16_000.0,
+                    shadows_enabled: true,
+                    shadow_projection: OrthographicProjection {
+                        left: -SHADOW_SIZE,
+                        right: SHADOW_SIZE,
+                        bottom: -SHADOW_SIZE,
+                        top: SHADOW_SIZE,
+                        near: -SHADOW_SIZE,
+                        far: SHADOW_SIZE,
+                        ..default()
+                    },
+                    ..default()
+                },
                 ..default()
-            },
-            ..default()
-        },
-        ..default()
-    });
+            });
+        }
+    }
 }
 
 fn restart(mut input: ResMut<Input<KeyCode>>, mut state: ResMut<State<AppState>>) {
