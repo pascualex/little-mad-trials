@@ -5,7 +5,7 @@ use crate::{
     phases::{self, Phases},
 };
 
-const HIDDEN_HEIGHT: f32 = -1.0;
+pub const HIDDEN_HEIGHT: f32 = -3.0;
 
 pub struct BoardPlugin;
 

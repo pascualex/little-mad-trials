@@ -6,7 +6,7 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 
 use crate::{
-    board::{BoardMode, Position},
+    board::{BoardMode, Position, HIDDEN_HEIGHT},
     palette,
     phases::{self, Phase, Phases},
     player::{self, Player},
@@ -101,7 +101,7 @@ fn laser(
         VisibilityBundle::default(),
     );
     let root = (
-        TransformBundle::default(),
+        TransformBundle::from_transform(Transform::from_xyz(0.0, HIDDEN_HEIGHT, 0.0)),
         VisibilityBundle::default(),
         Position::new(position),
         Laser::new(axis, mobile),
