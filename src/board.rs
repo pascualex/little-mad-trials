@@ -84,11 +84,12 @@ fn to_world_xz(mut query: Query<(&mut Transform, &Position)>) {
 
 fn to_world_y(mut query: Query<(&mut Transform, &Phases<BoardMode>)>) {
     for (mut transform, phases) in &mut query {
+        let y = transform.translation.y;
         transform.translation.y = match phases.mode() {
             BoardMode::Hidden => HIDDEN_HEIGHT,
-            BoardMode::Entering => HIDDEN_HEIGHT * (1.0 - phases.progress),
+            BoardMode::Entering => f32::max(HIDDEN_HEIGHT * (1.0 - phases.progress), y),
             BoardMode::Shown => 0.0,
-            BoardMode::Exiting => HIDDEN_HEIGHT * phases.progress,
+            BoardMode::Exiting => f32::min(HIDDEN_HEIGHT * phases.progress, y),
         };
     }
 }
