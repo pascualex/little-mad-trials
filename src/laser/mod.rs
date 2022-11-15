@@ -35,6 +35,7 @@ impl Plugin for LaserPlugin {
                     .with_system(movement.after(phases::transition::<LaserMode>))
                     .with_system(attack.after(movement).after(player::movement)),
             )
+            .add_system_set(SystemSet::on_enter(AppState::Teardown).with_system(enter_teardown))
             .add_system(phases::transition::<LaserMode>);
     }
 }
@@ -170,6 +171,18 @@ fn enter_start(
             },
         };
         laser_phases.reset(vec);
+    }
+}
+
+fn enter_teardown(mut query: Query<(&mut Phases<BoardMode>, &mut Phases<LaserMode>), With<Laser>>) {
+    for (mut board_phases, mut laser_phases) in &mut query {
+        board_phases.reset(vec![
+            Phase::new(BoardMode::Exiting, 1.0), // 1.0
+            Phase::new(BoardMode::Hidden, 0.0),  // final
+        ]);
+        laser_phases.reset(vec![
+            Phase::new(LaserMode::Ready, 0.0), // final
+        ]);
     }
 }
 

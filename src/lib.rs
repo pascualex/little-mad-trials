@@ -22,8 +22,7 @@ impl Plugin for AppPlugin {
             .add_startup_system(setup)
             .add_system_set(SystemSet::on_update(AppState::Game).with_system(instant_victory))
             .add_system_set(SystemSet::on_update(AppState::Defeat).with_system(restart))
-            .add_system_set(SystemSet::on_update(AppState::Victory).with_system(restart))
-            .add_system_set(SystemSet::on_enter(AppState::Teardown).with_system(enter_teardown));
+            .add_system_set(SystemSet::on_update(AppState::Victory).with_system(restart));
     }
 }
 
@@ -62,10 +61,6 @@ fn setup(mut commands: Commands) {
         },
         ..default()
     });
-}
-
-fn enter_teardown(mut state: ResMut<State<AppState>>) {
-    state.overwrite_set(AppState::Setup).unwrap();
 }
 
 fn restart(mut input: ResMut<Input<KeyCode>>, mut state: ResMut<State<AppState>>) {

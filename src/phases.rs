@@ -63,15 +63,14 @@ pub fn transition<T: Default + Send + Sync>(
             continue;
         }
         let duration = phases.vec.first().unwrap().duration;
-        let elapsed = match countdown.timer.finished() {
-            false => countdown.timer.elapsed(),
-            true => phases.start + duration,
-        };
-        if elapsed >= phases.start + duration {
+        if countdown.timer.elapsed() >= phases.start + duration || countdown.timer.finished() {
             phases.start += duration;
             phases.vec.remove(0);
         }
-        let progress = elapsed - phases.start;
+        let progress = match countdown.timer.elapsed() >= phases.start {
+            true => countdown.timer.elapsed() - phases.start,
+            false => Duration::ZERO,
+        };
         phases.progress = match phases.vec.first() {
             Some(phase) => match phase.duration {
                 Duration::ZERO => 1.0,
