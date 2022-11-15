@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
 
 use crate::{palette, AppState};
@@ -6,7 +8,7 @@ pub struct BackgroundPlugin;
 
 impl Plugin for BackgroundPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(Countdown::new(20.01)) // 0.01 to avoid roundoff errors
+        app.insert_resource(Countdown::new())
             .add_startup_system(setup)
             .add_system_set(SystemSet::on_enter(AppState::Start).with_system(enter_start))
             .add_system_set(
@@ -74,7 +76,7 @@ fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
 }
 
 fn enter_start(mut countdown: ResMut<Countdown>, mut query: Query<&mut Text, With<CountdownText>>) {
-    countdown.timer.reset();
+    countdown.reset(20.0);
     let mut text = query.single_mut();
     text.sections[0].value = "Move!".to_string();
 }
@@ -95,16 +97,20 @@ pub struct Countdown {
 }
 
 impl Countdown {
-    pub fn new(seconds: f32) -> Self {
+    pub fn new() -> Self {
         Self {
-            timer: Timer::from_seconds(seconds, TimerMode::Once),
+            timer: Timer::from_seconds(0.0, TimerMode::Once),
         }
+    }
+
+    pub fn reset(&mut self, seconds: f32) {
+        self.timer.set_duration(Duration::from_secs_f32(seconds));
+        self.timer.reset();
     }
 }
 
 #[derive(Component)]
 struct CountdownText;
-
 fn countdown(mut countdown: ResMut<Countdown>, time: Res<Time>) {
     countdown.timer.tick(time.delta());
 }

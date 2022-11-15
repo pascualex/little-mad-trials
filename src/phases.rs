@@ -11,7 +11,7 @@ impl Plugin for PhasesPlugin {
 }
 
 #[derive(Component)]
-pub struct Phases<T: Default + Send + Sync + 'static> {
+pub struct Phases<T: Send + Sync + 'static> {
     pub vec: Vec<Phase<T>>,
     pub start: Duration,
     pub progress: f32,
@@ -20,7 +20,7 @@ pub struct Phases<T: Default + Send + Sync + 'static> {
 impl<T: Default + Clone + Copy + Send + Sync> Phases<T> {
     pub fn new() -> Self {
         Self {
-            vec: Vec::new(),
+            vec: vec![Phase::new(T::default(), 0.0)],
             start: Duration::ZERO,
             progress: 0.0,
         }
@@ -29,7 +29,7 @@ impl<T: Default + Clone + Copy + Send + Sync> Phases<T> {
     pub fn mode(&self) -> T {
         match self.vec.first() {
             Some(phase) => phase.mode,
-            None => T::default(),
+            None => unreachable!(),
         }
     }
 
@@ -59,19 +59,23 @@ pub fn transition<T: Default + Send + Sync>(
     countdown: Res<Countdown>,
 ) {
     for mut phases in &mut query {
-        let duration = match phases.vec.first() {
-            Some(phase) => phase.duration,
-            None => continue,
+        if phases.vec.len() <= 1 {
+            continue;
+        }
+        let duration = phases.vec.first().unwrap().duration;
+        let elapsed = match countdown.timer.finished() {
+            false => countdown.timer.elapsed(),
+            true => phases.start + duration,
         };
-        if countdown.timer.elapsed() >= phases.start + duration {
+        if elapsed >= phases.start + duration {
             phases.start += duration;
             phases.vec.remove(0);
         }
-        let elapsed = countdown.timer.elapsed() - phases.start;
+        let progress = elapsed - phases.start;
         phases.progress = match phases.vec.first() {
             Some(phase) => match phase.duration {
                 Duration::ZERO => 1.0,
-                _ => f32::min(elapsed.as_secs_f32() / phase.duration.as_secs_f32(), 1.0),
+                _ => f32::min(progress.as_secs_f32() / phase.duration.as_secs_f32(), 1.0),
             },
             None => 1.0,
         };
