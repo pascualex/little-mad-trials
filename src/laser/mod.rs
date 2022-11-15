@@ -36,6 +36,7 @@ impl Plugin for LaserPlugin {
                     .with_system(movement.after(phases::transition::<LaserMode>))
                     .with_system(attack.after(movement).after(player::movement)),
             )
+            .add_system_set(SystemSet::on_enter(AppState::Victory).with_system(enter_teardown))
             .add_system_set(SystemSet::on_enter(AppState::Teardown).with_system(enter_teardown))
             .add_system(phases::transition::<LaserMode>.after(background::countdown));
     }

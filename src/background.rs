@@ -25,6 +25,7 @@ impl Plugin for BackgroundPlugin {
             )
             .add_system_set(SystemSet::on_enter(AppState::Defeat).with_system(enter_defeat))
             .add_system_set(SystemSet::on_enter(AppState::Victory).with_system(enter_victory))
+            .add_system_set(SystemSet::on_update(AppState::Victory).with_system(countdown))
             .add_system_set(SystemSet::on_enter(AppState::Teardown).with_system(enter_teardown))
             .add_system_set(
                 SystemSet::on_update(AppState::Teardown)
@@ -104,7 +105,11 @@ fn enter_defeat(mut query: Query<&mut Text, With<CountdownText>>) {
     text.sections[0].value = "Defeat".to_string();
 }
 
-fn enter_victory(mut query: Query<&mut Text, With<CountdownText>>) {
+fn enter_victory(
+    mut countdown: ResMut<Countdown>,
+    mut query: Query<&mut Text, With<CountdownText>>,
+) {
+    countdown.reset(1.0, None);
     let mut text = query.single_mut();
     text.sections[0].value = "Victory!".to_string();
 }
