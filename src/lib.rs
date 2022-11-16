@@ -14,7 +14,7 @@ use self::{board::BoardPlugin, laser::LaserPlugin, player::PlayerPlugin};
 
 const SHADOW_SIZE: f32 = 11.0;
 const LOW_CHROMATIC_ABERRATION: f32 = 0.0;
-const HIGH_CHROMATIC_ABERRATION: f32 = 0.001;
+const HIGH_CHROMATIC_ABERRATION: f32 = 0.0007;
 
 pub struct AppPlugin;
 

@@ -22,7 +22,7 @@ use self::{
 
 const POST_PROCESSING_SHADER_HANDLE: HandleUntyped =
     HandleUntyped::weak_from_u64(Shader::TYPE_UUID, 9918465827091940976);
-const POST_PROCESSING_NODE_3D: &str = "post_processing_node_3d";
+const POST_PROCESSING: &str = "post_processing";
 
 pub struct PostProcessingPlugin;
 
@@ -49,21 +49,21 @@ impl Plugin for PostProcessingPlugin {
         let node = PostProcessingNode::new(&mut render_app.world);
         let mut binding = render_app.world.resource_mut::<RenderGraph>();
         let graph = binding.get_sub_graph_mut(core_3d::graph::NAME).unwrap();
-        graph.add_node(POST_PROCESSING_NODE_3D, node);
+        graph.add_node(POST_PROCESSING, node);
         graph
             .add_slot_edge(
                 graph.input_node().unwrap().id,
                 core_3d::graph::input::VIEW_ENTITY,
-                POST_PROCESSING_NODE_3D,
+                POST_PROCESSING,
                 PostProcessingNode::IN_VIEW,
             )
             .unwrap();
         graph
-            .add_node_edge(core_3d::graph::node::TONEMAPPING, POST_PROCESSING_NODE_3D)
+            .add_node_edge(core_3d::graph::node::TONEMAPPING, POST_PROCESSING)
             .unwrap();
         graph
             .add_node_edge(
-                POST_PROCESSING_NODE_3D,
+                POST_PROCESSING,
                 core_3d::graph::node::END_MAIN_PASS_POST_PROCESSING,
             )
             .unwrap();
