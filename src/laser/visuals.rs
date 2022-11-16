@@ -8,6 +8,8 @@ use crate::{
     palette,
     phases::{self, Phases},
     player::Player,
+    post_processing::PostProcessing,
+    HIGH_CHROMATIC_ABERRATION, LOW_CHROMATIC_ABERRATION,
 };
 
 pub struct VisualsPlugin;
@@ -117,9 +119,18 @@ fn charge(
 fn attack(
     laser_query: Query<(&Phases<LaserMode>, &Visuals), Without<Player>>,
     mut visibility_query: Query<&mut Visibility>,
+    mut post_processing_query: Query<&mut PostProcessing>,
 ) {
+    let mut any_shooting = false;
     for (phases, visuals) in &laser_query {
+        let shooting = matches!(phases.mode(), LaserMode::Shooting);
         let mut visibility = visibility_query.get_mut(visuals.ray).unwrap();
-        visibility.is_visible = matches!(phases.mode(), LaserMode::Shooting);
+        visibility.is_visible = shooting;
+        any_shooting |= shooting;
     }
+    let mut post_processing = post_processing_query.single_mut();
+    post_processing.aberration = match any_shooting {
+        false => LOW_CHROMATIC_ABERRATION,
+        true => HIGH_CHROMATIC_ABERRATION,
+    };
 }

@@ -1,13 +1,11 @@
-use std::sync::Mutex;
-
 use bevy::{
     prelude::*,
     render::{
         render_graph::{Node, NodeRunError, RenderGraphContext, SlotInfo, SlotType},
         render_resource::{
-            BindGroup, BindGroupDescriptor, BindGroupEntry, BindingResource, FilterMode,
-            Operations, PipelineCache, RenderPassColorAttachment, RenderPassDescriptor,
-            SamplerDescriptor, TextureViewId, UniformBuffer,
+            BindGroupDescriptor, BindGroupEntry, BindingResource, FilterMode, Operations,
+            PipelineCache, RenderPassColorAttachment, RenderPassDescriptor, SamplerDescriptor,
+            UniformBuffer,
         },
         renderer::{RenderContext, RenderQueue},
         view::{ExtractedView, ViewTarget},
@@ -28,7 +26,6 @@ pub struct PostProcessingNode {
         ),
         With<ExtractedView>,
     >,
-    cached_texture_bind_group: Mutex<Option<(TextureViewId, BindGroup)>>,
 }
 
 impl PostProcessingNode {
@@ -37,7 +34,6 @@ impl PostProcessingNode {
     pub fn new(world: &mut World) -> Self {
         Self {
             query: QueryState::new(world),
-            cached_texture_bind_group: Mutex::new(None),
         }
     }
 }
@@ -74,44 +70,36 @@ impl Node for PostProcessingNode {
         let post_process = target.post_process_write();
         let source = post_process.source;
         let destination = post_process.destination;
-        let mut cached_bind_group = self.cached_texture_bind_group.lock().unwrap();
-        let bind_group = match &mut *cached_bind_group {
-            Some((id, bind_group)) if source.id() == *id => bind_group,
-            cached_bind_group => {
-                let device = &render_context.render_device;
-                let sampler = device.create_sampler(&SamplerDescriptor {
-                    mipmap_filter: FilterMode::Linear,
-                    mag_filter: FilterMode::Linear,
-                    min_filter: FilterMode::Linear,
-                    ..default()
-                });
 
-                let mut params_buffer = UniformBuffer::from(post_processing.params());
-                params_buffer.write_buffer(device, render_queue);
+        let device = &render_context.render_device;
+        let sampler = device.create_sampler(&SamplerDescriptor {
+            mipmap_filter: FilterMode::Linear,
+            mag_filter: FilterMode::Linear,
+            min_filter: FilterMode::Linear,
+            ..default()
+        });
 
-                let bind_group = device.create_bind_group(&BindGroupDescriptor {
-                    label: None,
-                    layout: &post_processing_pipeline.bind_group_layout,
-                    entries: &[
-                        BindGroupEntry {
-                            binding: 0,
-                            resource: BindingResource::TextureView(source),
-                        },
-                        BindGroupEntry {
-                            binding: 1,
-                            resource: BindingResource::Sampler(&sampler),
-                        },
-                        BindGroupEntry {
-                            binding: 2,
-                            resource: params_buffer.binding().unwrap(),
-                        },
-                    ],
-                });
+        let mut params_buffer = UniformBuffer::from(post_processing.params());
+        params_buffer.write_buffer(device, render_queue);
 
-                let (_, bind_group) = cached_bind_group.insert((source.id(), bind_group));
-                bind_group
-            }
-        };
+        let bind_group = device.create_bind_group(&BindGroupDescriptor {
+            label: None,
+            layout: &post_processing_pipeline.bind_group_layout,
+            entries: &[
+                BindGroupEntry {
+                    binding: 0,
+                    resource: BindingResource::TextureView(source),
+                },
+                BindGroupEntry {
+                    binding: 1,
+                    resource: BindingResource::Sampler(&sampler),
+                },
+                BindGroupEntry {
+                    binding: 2,
+                    resource: params_buffer.binding().unwrap(),
+                },
+            ],
+        });
 
         let pass_descriptor = RenderPassDescriptor {
             label: Some("post_processing_pass"),
@@ -128,7 +116,7 @@ impl Node for PostProcessingNode {
             .begin_render_pass(&pass_descriptor);
 
         render_pass.set_pipeline(pipeline);
-        render_pass.set_bind_group(0, bind_group, &[]);
+        render_pass.set_bind_group(0, &bind_group, &[]);
         render_pass.draw(0..3, 0..1);
 
         Ok(())

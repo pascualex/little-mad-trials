@@ -19,9 +19,9 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4<f32> {
     // chromatic aberration
     let offset = params.aberration;
     var output = vec4<f32>(
-        textureSample(texture, samp, uv + vec2<f32>(offset, -offset)).r,
-        textureSample(texture, samp, uv + vec2<f32>(-offset, 0.0)).g,
-        textureSample(texture, samp, uv + vec2<f32>(0.0, offset)).b,
+        textureSample(texture, samp, uv + vec2<f32>(offset, offset)).r,
+        textureSample(texture, samp, uv + vec2<f32>(0.0, -offset)).g,
+        textureSample(texture, samp, uv + vec2<f32>(-offset, offset)).b,
         1.0
     );
 

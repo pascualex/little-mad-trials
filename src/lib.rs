@@ -13,6 +13,8 @@ use post_processing::{PostProcessing, PostProcessingPlugin};
 use self::{board::BoardPlugin, laser::LaserPlugin, player::PlayerPlugin};
 
 const SHADOW_SIZE: f32 = 11.0;
+const LOW_CHROMATIC_ABERRATION: f32 = 0.0;
+const HIGH_CHROMATIC_ABERRATION: f32 = 0.001;
 
 pub struct AppPlugin;
 
@@ -48,7 +50,7 @@ fn setup(mut commands: Commands) {
             ..default()
         },
         Fxaa::default(),
-        PostProcessing::new(0.001),
+        PostProcessing::new(LOW_CHROMATIC_ABERRATION),
     ));
     for i in [-6.0, 4.0] {
         for j in [-6.0, 4.0] {
