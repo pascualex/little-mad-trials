@@ -7,14 +7,17 @@ mod player;
 mod post_processing;
 
 use background::BackgroundPlugin;
-use bevy::{core_pipeline::fxaa::Fxaa, prelude::*};
+use bevy::{
+    core_pipeline::{bloom::BloomSettings, fxaa::Fxaa},
+    prelude::*,
+};
 use post_processing::{PostProcessing, PostProcessingPlugin};
 
 use self::{board::BoardPlugin, laser::LaserPlugin, player::PlayerPlugin};
 
 const SHADOW_SIZE: f32 = 11.0;
 const LOW_CHROMATIC_ABERRATION: f32 = 0.0;
-const HIGH_CHROMATIC_ABERRATION: f32 = 0.0007;
+const HIGH_CHROMATIC_ABERRATION: f32 = 0.0005;
 
 pub struct AppPlugin;
 
@@ -46,10 +49,15 @@ pub enum AppState {
 fn setup(mut commands: Commands) {
     commands.spawn((
         Camera3dBundle {
+            camera: Camera {
+                hdr: true,
+                ..default()
+            },
             transform: Transform::from_xyz(5.0, 15.0, 15.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..default()
         },
         Fxaa::default(),
+        BloomSettings::default(),
         PostProcessing::new(LOW_CHROMATIC_ABERRATION),
     ));
     for i in [-6.0, 4.0] {
@@ -58,7 +66,7 @@ fn setup(mut commands: Commands) {
                 transform: Transform::from_translation(Vec3::ZERO)
                     .looking_at(Vec3::new(j, -6.0, i), Vec3::Y),
                 directional_light: DirectionalLight {
-                    illuminance: 16_000.0,
+                    illuminance: 9_000.0,
                     shadows_enabled: true,
                     shadow_projection: OrthographicProjection {
                         left: -SHADOW_SIZE,

@@ -98,7 +98,7 @@ fn laser(
     let ray = ray_blueprint(commands, meshes, materials);
     let model = (
         TransformBundle::from_transform(
-            Transform::from_xyz(0.0, 0.5, 0.0).with_rotation(Quat::from_rotation_y(rotation)),
+            Transform::from_xyz(0.0, 0.3, 0.0).with_rotation(Quat::from_rotation_y(rotation)),
         ),
         VisibilityBundle::default(),
     );

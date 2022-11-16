@@ -5,7 +5,6 @@ use bevy::{
 
 use crate::{
     laser::LaserMode,
-    palette,
     phases::{self, Phases},
     player::Player,
     post_processing::PostProcessing,
@@ -70,7 +69,7 @@ pub fn ray_blueprint(
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Box::new(0.1, 0.1, 4.0))),
             material: materials.add(StandardMaterial {
-                base_color: palette::DARK_RED,
+                base_color: Color::rgb(1.0, 0.15, 0.18) * 2.0,
                 metallic: 0.1,
                 perceptual_roughness: 0.7,
                 reflectance: 0.3,
