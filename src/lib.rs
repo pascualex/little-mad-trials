@@ -17,7 +17,7 @@ use self::{board::BoardPlugin, laser::LaserPlugin, player::PlayerPlugin};
 
 const SHADOW_SIZE: f32 = 11.0;
 const LOW_CHROMATIC_ABERRATION: f32 = 0.0;
-const HIGH_CHROMATIC_ABERRATION: f32 = 0.0005;
+const HIGH_CHROMATIC_ABERRATION: f32 = 0.001;
 
 pub struct AppPlugin;
 
@@ -56,6 +56,7 @@ fn setup(mut commands: Commands) {
             transform: Transform::from_xyz(5.0, 15.0, 15.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..default()
         },
+        UiCameraConfig { show_ui: false },
         Fxaa::default(),
         BloomSettings::default(),
         PostProcessing::new(LOW_CHROMATIC_ABERRATION),
