@@ -4,9 +4,11 @@ mod laser;
 mod palette;
 mod phases;
 mod player;
+mod post_processing;
 
 use background::BackgroundPlugin;
 use bevy::{core_pipeline::fxaa::Fxaa, prelude::*};
+use post_processing::{PostProcessing, PostProcessingPlugin};
 
 use self::{board::BoardPlugin, laser::LaserPlugin, player::PlayerPlugin};
 
@@ -21,6 +23,7 @@ impl Plugin for AppPlugin {
             .add_plugin(BoardPlugin)
             .add_plugin(PlayerPlugin)
             .add_plugin(LaserPlugin)
+            .add_plugin(PostProcessingPlugin)
             .add_startup_system(setup)
             .add_system_set(SystemSet::on_update(AppState::Game).with_system(instant_victory))
             .add_system_set(SystemSet::on_update(AppState::Defeat).with_system(restart))
@@ -45,6 +48,7 @@ fn setup(mut commands: Commands) {
             ..default()
         },
         Fxaa::default(),
+        PostProcessing::new(0.001),
     ));
     for i in [-6.0, 4.0] {
         for j in [-6.0, 4.0] {
