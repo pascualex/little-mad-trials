@@ -1,10 +1,11 @@
-use std::f32::consts::PI;
-
 use bevy::{
     pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
     reflect::TypeUuid,
-    render::render_resource::{AsBindGroup, ShaderRef},
+    render::{
+        mesh::Indices,
+        render_resource::{AsBindGroup, PrimitiveTopology, ShaderRef},
+    },
 };
 
 use crate::palette;
@@ -25,13 +26,12 @@ fn setup(
 ) {
     commands.spawn((
         MaterialMeshBundle {
-            mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(40.0, 40.0)))),
+            mesh: meshes.add(Mesh::from(Fog::new(40.0, 100))),
             material: materials.add(FogMaterial {
                 color: palette::DARK_PINK,
                 alpha_mode: AlphaMode::Blend,
             }),
-            transform: Transform::from_xyz(0.0, -4.0, 10.0)
-                .with_rotation(Quat::from_rotation_x(-PI / 2.0)),
+            transform: Transform::from_xyz(0.0, -4.0, 10.0),
             ..default()
         },
         NotShadowCaster,
@@ -54,5 +54,59 @@ impl Material for FogMaterial {
 
     fn alpha_mode(&self) -> AlphaMode {
         self.alpha_mode
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+struct Fog {
+    size: f32,
+    num_vertices: u32,
+}
+
+impl Fog {
+    pub fn new(size: f32, num_vertices: u32) -> Self {
+        Self { size, num_vertices }
+    }
+}
+
+impl From<Fog> for Mesh {
+    fn from(fog: Fog) -> Self {
+        let side = fog.size / 2.0;
+
+        let mut uvs = Vec::new();
+        let mut positions = Vec::new();
+        let mut normals = Vec::new();
+        for i in 0..fog.num_vertices {
+            for j in 0..fog.num_vertices {
+                let uv = [
+                    j as f32 / (fog.num_vertices - 1) as f32,
+                    i as f32 / (fog.num_vertices - 1) as f32,
+                ];
+                uvs.push(uv);
+                positions.push([uv[0] * fog.size - side, 0.0, uv[1] * fog.size - side]);
+                normals.push([0.0, 1.0, 0.0]);
+            }
+        }
+
+        let cells = (fog.num_vertices - 1) * (fog.num_vertices - 1);
+
+        let mut indices = Vec::new();
+        for i in 0..cells {
+            // top left triangle
+            indices.push(i);
+            indices.push(i + fog.num_vertices);
+            indices.push(i + fog.num_vertices + 1);
+            // bottom right triangle
+            indices.push(i);
+            indices.push(i + fog.num_vertices + 1);
+            indices.push(i + 1);
+        }
+
+        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+        mesh.set_indices(Some(Indices::U32(indices)));
+        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
+        mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+        mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
+        mesh
     }
 }
