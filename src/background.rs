@@ -130,7 +130,7 @@ fn setup(
     commands.spawn((
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(1000.0, 1000.0)))),
-            material: materials.add(material_from_color(palette::LIGHT_WHITE)),
+            material: materials.add(material_from_color(palette::LIGHT_WHITE * 0.75)),
             transform: Transform::from_xyz(0.0, 0.0, -10.0),
             ..default()
         },
@@ -139,7 +139,7 @@ fn setup(
     commands.spawn((
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(1000.0, 1000.0)))),
-            material: materials.add(material_from_color(palette::LIGHT_WHITE * 0.9)),
+            material: materials.add(material_from_color(palette::LIGHT_WHITE * 0.65)),
             transform: Transform::from_xyz(-20.0, 0.0, 0.0)
                 .with_rotation(Quat::from_rotation_y(PI / 2.0)),
             ..default()
@@ -150,7 +150,7 @@ fn setup(
     commands.spawn((
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(1000.0, 1000.0)))),
-            material: materials.add(material_from_color(palette::LIGHT_WHITE * 0.9)),
+            material: materials.add(material_from_color(palette::LIGHT_WHITE * 0.65)),
             transform: Transform::from_xyz(20.0, 0.0, 0.0)
                 .with_rotation(Quat::from_rotation_y(-PI / 2.0)),
             ..default()
@@ -172,7 +172,7 @@ fn setup(
 }
 
 fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
-    let root = (NodeBundle {
+    let root = NodeBundle {
         style: Style {
             size: Size::new(Val::Px(512.0), Val::Px(350.0)),
             flex_direction: FlexDirection::Column,
@@ -181,14 +181,71 @@ fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
             ..default()
         },
         ..default()
-    },);
+    };
+    let splash_top_text = (
+        TextBundle {
+            text: Text::from_section(
+                " ",
+                TextStyle {
+                    font: asset_server.load("fonts/roboto_bold.ttf"),
+                    font_size: 30.0,
+                    color: Color::BLACK,
+                },
+            ),
+            style: Style {
+                margin: UiRect::new(Val::Undefined, Val::Undefined, Val::Px(5.0), Val::Undefined),
+                ..default()
+            },
+            ..default()
+        },
+        ScreenElement::new(AppState::Splash),
+    );
+    let splash_text = (
+        TextBundle {
+            text: Text {
+                sections: vec![TextSection::new(
+                    "Little Mad\nTrials",
+                    TextStyle {
+                        font: asset_server.load("fonts/roboto_bold.ttf"),
+                        font_size: 100.0,
+                        color: Color::BLACK,
+                    },
+                )],
+                alignment: TextAlignment::CENTER,
+            },
+            style: Style {
+                margin: UiRect::all(Val::Auto),
+                ..default()
+            },
+            ..default()
+        },
+        ScreenElement::new(AppState::Splash),
+    );
+    let splash_bottom_text = (
+        TextBundle {
+            text: Text::from_section(
+                "[space] to start",
+                TextStyle {
+                    font: asset_server.load("fonts/roboto_bold.ttf"),
+                    font_size: 75.0,
+                    color: Color::BLACK,
+                },
+            ),
+            style: Style {
+                margin: UiRect::new(Val::Undefined, Val::Undefined, Val::Undefined, Val::Px(5.0)),
+                ..default()
+            },
+            ..default()
+        },
+        ScreenElement::new(AppState::Splash),
+    );
     let start_top_text = (
         TextBundle {
             text: Text::from_section(
                 " ",
                 TextStyle {
                     font: asset_server.load("fonts/roboto_bold.ttf"),
-                    font_size: 75.0,
+                    font_size: 40.0,
                     color: Color::BLACK,
                 },
             ),
@@ -269,7 +326,7 @@ fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
                 " ",
                 TextStyle {
                     font: asset_server.load("fonts/roboto_bold.ttf"),
-                    font_size: 75.0,
+                    font_size: 40.0,
                     color: Color::BLACK,
                 },
             ),
@@ -373,6 +430,9 @@ fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
         Flip::new(0.5),
     );
     commands.spawn(root).with_children(|builder| {
+        builder.spawn(splash_top_text);
+        builder.spawn(splash_text);
+        builder.spawn(splash_bottom_text);
         builder.spawn(start_top_text);
         builder.spawn(dodge_text);
         builder.spawn(start_bottom_text);

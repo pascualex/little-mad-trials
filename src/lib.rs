@@ -23,13 +23,14 @@ pub struct AppPlugin;
 
 impl Plugin for AppPlugin {
     fn build(&self, app: &mut App) {
-        app.add_state(AppState::Setup)
+        app.add_state(AppState::Splash)
             .add_plugin(BackgroundPlugin)
             .add_plugin(BoardPlugin)
             .add_plugin(PlayerPlugin)
             .add_plugin(LaserPlugin)
             .add_plugin(PostProcessingPlugin)
             .add_startup_system(setup)
+            .add_system_set(SystemSet::on_update(AppState::Splash).with_system(start))
             .add_system_set(SystemSet::on_update(AppState::Game).with_system(instant_victory))
             .add_system_set(SystemSet::on_update(AppState::Defeat).with_system(restart))
             .add_system_set(SystemSet::on_update(AppState::Victory).with_system(restart));
@@ -38,6 +39,7 @@ impl Plugin for AppPlugin {
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum AppState {
+    Splash,
     Setup,
     Start,
     Game,
@@ -83,6 +85,13 @@ fn setup(mut commands: Commands) {
                 ..default()
             });
         }
+    }
+}
+
+fn start(mut input: ResMut<Input<KeyCode>>, mut state: ResMut<State<AppState>>) {
+    if input.just_pressed(KeyCode::Space) {
+        state.overwrite_set(AppState::Setup).unwrap();
+        input.clear(); // avoids infinite loops until stageless
     }
 }
 
