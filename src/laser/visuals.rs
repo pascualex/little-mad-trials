@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use bevy::{
     pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
@@ -56,9 +58,16 @@ pub fn ray_blueprint(
 ) -> Entity {
     let root = (
         MaterialMeshBundle {
-            mesh: meshes.add(Mesh::from(shape::Box::new(0.1, 0.1, 4.0))),
-            material: materials.add(material_from_color(Color::rgb(1.0, 0.15, 0.18) * 2.0)),
-            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+            mesh: meshes.add(Mesh::from(shape::Capsule {
+                depth: 4.0,
+                radius: 0.075,
+                ..default()
+            })),
+            material: materials.add(StandardMaterial {
+                emissive: Color::rgb(1.0, 0.02, 0.03) * 5.0,
+                ..material_from_color(Color::rgb(1.0, 0.1, 0.12))
+            }),
+            transform: Transform::from_rotation(Quat::from_rotation_x(PI / 2.0)),
             visibility: Visibility { is_visible: false },
             ..default()
         },
