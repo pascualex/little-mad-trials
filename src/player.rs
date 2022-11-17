@@ -7,6 +7,14 @@ use crate::{
     AppState,
 };
 
+const PLAYER_COLORS: [Color; 5] = [
+    palette::DARK_BLUE,
+    palette::DARK_GREEN,
+    palette::DARK_PURPLE,
+    palette::DARK_CYAN,
+    palette::DARK_PINK,
+];
+
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
@@ -39,7 +47,7 @@ fn setup(
         .spawn(MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Cube::new(0.8))),
             material: materials.add(StandardMaterial {
-                base_color: palette::DARK_BLUE,
+                base_color: palette::DARK_BLACK,
                 metallic: 0.1,
                 perceptual_roughness: 0.7,
                 reflectance: 0.3,
@@ -75,16 +83,27 @@ fn setup(
 }
 
 fn enter_setup(
-    mut query: Query<(&mut Position, &mut Phases<BoardMode>), With<Player>>,
+    mut player_query: Query<(&mut Position, &mut Player, &mut Phases<BoardMode>)>,
+    mut material_query: Query<&mut Handle<StandardMaterial>>,
     mut health: ResMut<Health>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let (mut position, mut phases) = query.single_mut();
+    let (mut position, mut player, mut phases) = player_query.single_mut();
     position.vec = IVec2::ZERO;
     phases.reset(vec![
         Phase::new(BoardMode::Waiting, 0.4),  // 0.4
         Phase::new(BoardMode::Entering, 1.0), // 1.4
         Phase::new(BoardMode::Shown, 0.0),    // final
     ]);
+    let mut handle = material_query.get_mut(player.alive).unwrap();
+    *handle = materials.add(StandardMaterial {
+        base_color: PLAYER_COLORS[player.color],
+        metallic: 0.1,
+        perceptual_roughness: 0.7,
+        reflectance: 0.3,
+        ..default()
+    });
+    player.color = (player.color + 1) % PLAYER_COLORS.len();
     health.dead = false;
 }
 
@@ -105,13 +124,18 @@ pub struct Health {
 
 #[derive(Component)]
 pub struct Player {
-    pub alive: Entity,
-    pub dead: Entity,
+    alive: Entity,
+    dead: Entity,
+    color: usize,
 }
 
 impl Player {
     pub fn new(alive: Entity, dead: Entity) -> Self {
-        Self { alive, dead }
+        Self {
+            alive,
+            dead,
+            color: 0,
+        }
     }
 }
 
