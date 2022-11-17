@@ -8,7 +8,7 @@ use crate::{
     AppState,
 };
 
-pub const HIDDEN_HEIGHT: f32 = -3.0;
+pub const HIDDEN_HEIGHT: f32 = -5.0;
 
 pub struct BoardPlugin;
 
@@ -31,7 +31,7 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let model = MaterialMeshBundle {
-        mesh: meshes.add(Mesh::from(shape::Box::new(0.92, 4.0, 0.92))),
+        mesh: meshes.add(Mesh::from(shape::Box::new(0.92, 40.0, 0.92))),
         material: materials.add(StandardMaterial {
             base_color: palette::LIGHT_WHITE,
             metallic: 0.1,
@@ -39,7 +39,7 @@ fn setup(
             reflectance: 0.3,
             ..default()
         }),
-        transform: Transform::from_xyz(0.0, -2.0, 0.0),
+        transform: Transform::from_xyz(0.0, -20.0, 0.0),
         ..default()
     };
     for i in -1..=1 {
