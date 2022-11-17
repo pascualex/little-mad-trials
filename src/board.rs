@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use bevy::{prelude::*, utils::HashSet};
 
 use crate::{
@@ -128,10 +130,14 @@ fn to_world_y(mut query: Query<(&mut Transform, &Phases<BoardMode>)>) {
         let y = transform.translation.y;
         transform.translation.y = match phases.mode() {
             BoardMode::Hidden => HIDDEN_HEIGHT,
-            BoardMode::Entering => f32::max(HIDDEN_HEIGHT * (1.0 - phases.progress), y),
+            BoardMode::Entering => f32::max(HIDDEN_HEIGHT * ease(1.0 - phases.progress), y),
             BoardMode::Shown => 0.0,
-            BoardMode::Exiting => f32::min(HIDDEN_HEIGHT * phases.progress, y),
+            BoardMode::Exiting => f32::min(HIDDEN_HEIGHT * ease(phases.progress), y),
             BoardMode::Waiting => y,
         };
     }
+}
+
+fn ease(x: f32) -> f32 {
+    -(f32::cos(PI * x) - 1.0) / 2.0
 }
