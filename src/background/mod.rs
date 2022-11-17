@@ -1,3 +1,4 @@
+mod fog;
 mod screen;
 
 use std::{f32::consts::PI, time::Duration};
@@ -9,13 +10,14 @@ use bevy::{
 
 use crate::{material_from_color, palette, AppState};
 
-use self::screen::ScreenPlugin;
+use self::{fog::FogPlugin, screen::ScreenPlugin};
 
 pub struct BackgroundPlugin;
 
 impl Plugin for BackgroundPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(ScreenPlugin)
+        app.add_plugin(FogPlugin)
+            .add_plugin(ScreenPlugin)
             .insert_resource(Countdown::new())
             .add_startup_system(setup)
             .add_system_set(SystemSet::on_enter(AppState::Setup).with_system(enter_setup))
@@ -46,6 +48,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    // main wall
     commands.spawn((
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(1000.0, 1000.0)))),
@@ -55,6 +58,7 @@ fn setup(
         },
         NotShadowCaster,
     ));
+    // left wall
     commands.spawn((
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(1000.0, 1000.0)))),
@@ -66,6 +70,7 @@ fn setup(
         NotShadowCaster,
         NotShadowReceiver,
     ));
+    // rigth wall
     commands.spawn((
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(1000.0, 1000.0)))),
@@ -77,17 +82,7 @@ fn setup(
         NotShadowCaster,
         NotShadowReceiver,
     ));
-    commands.spawn((
-        MaterialMeshBundle {
-            mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(40.0, 40.0)))),
-            material: materials.add(material_from_color(palette::DARK_PINK)),
-            transform: Transform::from_xyz(0.0, -4.0, 10.0)
-                .with_rotation(Quat::from_rotation_x(-PI / 2.0)),
-            ..default()
-        },
-        NotShadowCaster,
-        NotShadowReceiver,
-    ));
+    // deep floor
     commands.spawn((
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(1000.0, 1000.0)))),
