@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{f32::consts::PI, time::Duration};
 
 use bevy::{
     core_pipeline::clear_color::ClearColorConfig,
@@ -41,7 +41,9 @@ impl Plugin for BackgroundPlugin {
                     .with_system(countdown)
                     .with_system(transition.after(countdown)),
             )
-            .add_system(show_screen_elements);
+            .add_system(show_screen_elements)
+            .add_system(flip)
+            .add_system(spin);
     }
 }
 
@@ -56,7 +58,7 @@ fn setup(
 
     let size = Extent3d {
         width: 512,
-        height: 288,
+        height: 350,
         ..default()
     };
     let mut image = Image {
@@ -130,13 +132,32 @@ fn setup(
 fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
     let root = (NodeBundle {
         style: Style {
-            size: Size::new(Val::Px(512.0), Val::Px(288.0)),
+            size: Size::new(Val::Px(512.0), Val::Px(350.0)),
+            flex_direction: FlexDirection::Column,
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
             ..default()
         },
         ..default()
     },);
+    let start_top_text = (
+        TextBundle {
+            text: Text::from_section(
+                " ",
+                TextStyle {
+                    font: asset_server.load("fonts/roboto_bold.ttf"),
+                    font_size: 75.0,
+                    color: palette::DARK_BLACK,
+                },
+            ),
+            style: Style {
+                margin: UiRect::new(Val::Undefined, Val::Undefined, Val::Px(5.0), Val::Undefined),
+                ..default()
+            },
+            ..default()
+        },
+        ScreenElement::new(AppState::Start),
+    );
     let dodge_text = (
         TextBundle {
             text: Text::from_section(
@@ -147,6 +168,28 @@ fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
                     color: palette::DARK_BLACK,
                 },
             ),
+            style: Style {
+                margin: UiRect::all(Val::Auto),
+                ..default()
+            },
+            ..default()
+        },
+        ScreenElement::new(AppState::Start),
+    );
+    let start_bottom_text = (
+        TextBundle {
+            text: Text::from_section(
+                "[arrows] to move",
+                TextStyle {
+                    font: asset_server.load("fonts/roboto_bold.ttf"),
+                    font_size: 75.0,
+                    color: palette::DARK_BLACK,
+                },
+            ),
+            style: Style {
+                margin: UiRect::new(Val::Undefined, Val::Undefined, Val::Undefined, Val::Px(5.0)),
+                ..default()
+            },
             ..default()
         },
         ScreenElement::new(AppState::Start),
@@ -176,11 +219,31 @@ fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
             ..default()
         },
         ScreenElement::new(AppState::Setup),
+        Spin::new(1.2),
+    );
+    let defeat_top_text = (
+        TextBundle {
+            text: Text::from_section(
+                " ",
+                TextStyle {
+                    font: asset_server.load("fonts/roboto_bold.ttf"),
+                    font_size: 75.0,
+                    color: palette::DARK_BLACK,
+                },
+            ),
+            style: Style {
+                margin: UiRect::new(Val::Undefined, Val::Undefined, Val::Px(5.0), Val::Undefined),
+                ..default()
+            },
+            ..default()
+        },
+        ScreenElement::new(AppState::Defeat),
     );
     let skull = (
         ImageBundle {
             style: Style {
                 size: Size::new(Val::Px(170.0), Val::Px(180.0)),
+                margin: UiRect::all(Val::Auto),
                 ..default()
             },
             image: asset_server.load("sprites/skull.png").into(),
@@ -188,13 +251,69 @@ fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
         },
         ScreenElement::new(AppState::Defeat),
     );
+    let defeat_bottom_text = (
+        TextBundle {
+            text: Text::from_section(
+                "[space] to retry",
+                TextStyle {
+                    font: asset_server.load("fonts/roboto_bold.ttf"),
+                    font_size: 75.0,
+                    color: palette::DARK_BLACK,
+                },
+            ),
+            style: Style {
+                margin: UiRect::new(Val::Undefined, Val::Undefined, Val::Undefined, Val::Px(5.0)),
+                ..default()
+            },
+            ..default()
+        },
+        ScreenElement::new(AppState::Defeat),
+    );
+    let victory_top_text = (
+        TextBundle {
+            text: Text::from_section(
+                "Victory!",
+                TextStyle {
+                    font: asset_server.load("fonts/roboto_bold.ttf"),
+                    font_size: 75.0,
+                    color: palette::DARK_BLACK,
+                },
+            ),
+            style: Style {
+                margin: UiRect::new(Val::Undefined, Val::Undefined, Val::Px(5.0), Val::Undefined),
+                ..default()
+            },
+            ..default()
+        },
+        ScreenElement::new(AppState::Victory),
+    );
     let popper = (
         ImageBundle {
             style: Style {
                 size: Size::new(Val::Px(180.0), Val::Px(180.0)),
+                margin: UiRect::all(Val::Auto),
                 ..default()
             },
             image: asset_server.load("sprites/popper.png").into(),
+            ..default()
+        },
+        ScreenElement::new(AppState::Victory),
+        Flip::new(0.8),
+    );
+    let victory_bottom_text = (
+        TextBundle {
+            text: Text::from_section(
+                "[space] to replay",
+                TextStyle {
+                    font: asset_server.load("fonts/roboto_bold.ttf"),
+                    font_size: 75.0,
+                    color: palette::DARK_BLACK,
+                },
+            ),
+            style: Style {
+                margin: UiRect::new(Val::Undefined, Val::Undefined, Val::Undefined, Val::Px(5.0)),
+                ..default()
+            },
             ..default()
         },
         ScreenElement::new(AppState::Victory),
@@ -209,13 +328,20 @@ fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
             ..default()
         },
         ScreenElement::new(AppState::Teardown),
+        Flip::new(0.5),
     );
     commands.spawn(root).with_children(|builder| {
+        builder.spawn(start_top_text);
         builder.spawn(dodge_text);
+        builder.spawn(start_bottom_text);
         builder.spawn(countdown_text);
         builder.spawn(gear);
+        builder.spawn(defeat_top_text);
         builder.spawn(skull);
+        builder.spawn(defeat_bottom_text);
+        builder.spawn(victory_top_text);
         builder.spawn(popper);
+        builder.spawn(victory_bottom_text);
         builder.spawn(broom);
     });
 }
@@ -265,6 +391,32 @@ struct ScreenElement {
     state: AppState,
 }
 
+#[derive(Component)]
+struct Flip {
+    timer: Timer,
+}
+
+impl Flip {
+    pub fn new(seconds: f32) -> Self {
+        Self {
+            timer: Timer::from_seconds(seconds, TimerMode::Repeating),
+        }
+    }
+}
+
+#[derive(Component)]
+struct Spin {
+    timer: Timer,
+}
+
+impl Spin {
+    pub fn new(seconds: f32) -> Self {
+        Self {
+            timer: Timer::from_seconds(seconds, TimerMode::Repeating),
+        }
+    }
+}
+
 impl ScreenElement {
     pub fn new(state: AppState) -> Self {
         Self { state }
@@ -273,6 +425,15 @@ impl ScreenElement {
 
 pub fn countdown(mut countdown: ResMut<Countdown>, time: Res<Time>) {
     countdown.timer.tick(time.delta());
+}
+
+fn transition(countdown: Res<Countdown>, mut state: ResMut<State<AppState>>) {
+    let Some(transition) = countdown.transition else {
+        return;
+    };
+    if countdown.timer.finished() {
+        state.overwrite_set(transition).unwrap();
+    }
 }
 
 fn show_screen_elements(
@@ -287,17 +448,22 @@ fn show_screen_elements(
     }
 }
 
+fn flip(mut query: Query<(&mut Flip, &mut UiImage)>, time: Res<Time>) {
+    for (mut flip, mut ui_image) in &mut query {
+        flip.timer.tick(time.delta());
+        ui_image.flip_x = flip.timer.percent() >= 0.5;
+    }
+}
+
+fn spin(mut query: Query<(&mut Spin, &mut Transform)>, time: Res<Time>) {
+    for (mut spin, mut transform) in &mut query {
+        spin.timer.tick(time.delta());
+        transform.rotation = Quat::from_rotation_z(2.0 * PI * spin.timer.percent());
+    }
+}
+
 fn show_countdown(mut query: Query<&mut Text, With<CountdownText>>, countdown: Res<Countdown>) {
     let mut text = query.single_mut();
     let remaining = countdown.timer.duration() - countdown.timer.elapsed();
     text.sections[0].value = format!("{:.1}", remaining.as_secs_f32());
-}
-
-fn transition(countdown: Res<Countdown>, mut state: ResMut<State<AppState>>) {
-    let Some(transition) = countdown.transition else {
-        return;
-    };
-    if countdown.timer.finished() {
-        state.overwrite_set(transition).unwrap();
-    }
 }
