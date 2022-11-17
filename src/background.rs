@@ -102,7 +102,10 @@ fn setup(
     });
     commands.spawn(MaterialMeshBundle {
         mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(4.0, 2.25)))),
-        material: materials.add(material_from_color(palette::LIGHT_WHITE * 1.8)),
+        material: materials.add(StandardMaterial {
+            emissive: palette::LIGHT_WHITE * 1.6,
+            ..material_from_color(palette::LIGHT_WHITE)
+        }),
         transform: Transform::from_xyz(0.0, 4.0, -6.94),
         ..default()
     });
@@ -180,7 +183,7 @@ fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
                 TextStyle {
                     font: asset_server.load("fonts/roboto_bold.ttf"),
                     font_size: 75.0,
-                    color: palette::DARK_BLACK,
+                    color: Color::BLACK,
                 },
             ),
             style: Style {
@@ -198,7 +201,7 @@ fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
                 TextStyle {
                     font: asset_server.load("fonts/roboto_bold.ttf"),
                     font_size: 124.0,
-                    color: palette::DARK_BLACK,
+                    color: Color::BLACK,
                 },
             ),
             style: Style {
@@ -216,7 +219,7 @@ fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
                 TextStyle {
                     font: asset_server.load("fonts/roboto_bold.ttf"),
                     font_size: 75.0,
-                    color: palette::DARK_BLACK,
+                    color: Color::BLACK,
                 },
             ),
             style: Style {
@@ -234,7 +237,7 @@ fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
                 TextStyle {
                     font: asset_server.load("fonts/roboto_bold.ttf"),
                     font_size: 124.0,
-                    color: palette::DARK_BLACK,
+                    color: Color::BLACK,
                 },
             ),
             ..default()
@@ -261,7 +264,7 @@ fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
                 TextStyle {
                     font: asset_server.load("fonts/roboto_bold.ttf"),
                     font_size: 75.0,
-                    color: palette::DARK_BLACK,
+                    color: Color::BLACK,
                 },
             ),
             style: Style {
@@ -291,7 +294,7 @@ fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
                 TextStyle {
                     font: asset_server.load("fonts/roboto_bold.ttf"),
                     font_size: 75.0,
-                    color: palette::DARK_BLACK,
+                    color: Color::BLACK,
                 },
             ),
             style: Style {
@@ -309,7 +312,7 @@ fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
                 TextStyle {
                     font: asset_server.load("fonts/roboto_bold.ttf"),
                     font_size: 75.0,
-                    color: palette::DARK_BLACK,
+                    color: Color::BLACK,
                 },
             ),
             style: Style {
@@ -340,7 +343,7 @@ fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
                 TextStyle {
                     font: asset_server.load("fonts/roboto_bold.ttf"),
                     font_size: 75.0,
-                    color: palette::DARK_BLACK,
+                    color: Color::BLACK,
                 },
             ),
             style: Style {
