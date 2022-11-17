@@ -67,7 +67,7 @@ fn setup(mut commands: Commands) {
                 transform: Transform::from_translation(Vec3::ZERO)
                     .looking_at(Vec3::new(j, -6.0, i), Vec3::Y),
                 directional_light: DirectionalLight {
-                    illuminance: 9_000.0,
+                    illuminance: (i.abs() + j.abs()) * 1100.0,
                     shadows_enabled: true,
                     shadow_projection: OrthographicProjection {
                         left: -SHADOW_SIZE,

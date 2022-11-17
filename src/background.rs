@@ -101,6 +101,12 @@ fn setup(
         ..default()
     });
     commands.spawn(MaterialMeshBundle {
+        mesh: meshes.add(Mesh::from(shape::Box::new(0.5, 40.0, 0.1))),
+        material: materials.add(material_from_color(palette::DARK_BLACK)),
+        transform: Transform::from_xyz(0.0, 22.75, -7.2),
+        ..default()
+    });
+    commands.spawn(MaterialMeshBundle {
         mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(4.0, 2.25)))),
         material: materials.add(StandardMaterial {
             emissive: palette::LIGHT_WHITE * 1.6,
