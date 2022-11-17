@@ -47,7 +47,7 @@ fn setup(
         .spawn(MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Cube::new(0.8))),
             material: materials.add(StandardMaterial {
-                base_color: palette::DARK_BLACK,
+                base_color: PLAYER_COLORS[0],
                 metallic: 0.1,
                 perceptual_roughness: 0.7,
                 reflectance: 0.3,
@@ -103,7 +103,11 @@ fn enter_setup(
         reflectance: 0.3,
         ..default()
     });
-    player.color = (player.color + 1) % PLAYER_COLORS.len();
+    let mut color = player.color;
+    while color == player.color {
+        color = fastrand::usize(..PLAYER_COLORS.len());
+    }
+    player.color = color;
     health.dead = false;
 }
 
