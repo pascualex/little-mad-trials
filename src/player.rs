@@ -7,13 +7,14 @@ use crate::{
     AppState,
 };
 
-const PLAYER_COLORS: [Color; 5] = [
+const PLAYER_ALIVE_COLORS: [Color; 5] = [
     palette::DARK_BLUE,
     palette::DARK_GREEN,
     palette::DARK_PURPLE,
     palette::DARK_CYAN,
     palette::DARK_PINK,
 ];
+const PLAYER_DEAD_COLOR: Color = palette::DARK_BLACK;
 
 pub struct PlayerPlugin;
 
@@ -22,6 +23,7 @@ impl Plugin for PlayerPlugin {
         app.init_resource::<Health>()
             .add_startup_system(setup)
             .add_system_set(SystemSet::on_enter(AppState::Setup).with_system(enter_setup))
+            .add_system_set(SystemSet::on_enter(AppState::Defeat).with_system(enter_defeat))
             .add_system_set(SystemSet::on_enter(AppState::Teardown).with_system(enter_teardown))
             .add_system_set(
                 SystemSet::on_update(AppState::Start)
@@ -33,8 +35,7 @@ impl Plugin for PlayerPlugin {
                     .with_system(movement)
                     .with_system(defeat.after(laser::attack)),
             )
-            .add_system_set(SystemSet::on_update(AppState::Victory).with_system(movement))
-            .add_system(health_visuals);
+            .add_system_set(SystemSet::on_update(AppState::Victory).with_system(movement));
     }
 }
 
@@ -43,20 +44,11 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let alive = commands
+    let model = commands
         .spawn(MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Cube::new(0.8))),
-            material: materials.add(material_from_color(PLAYER_COLORS[0])),
+            material: materials.add(material_from_color(PLAYER_ALIVE_COLORS[0])),
             transform: Transform::from_xyz(0.0, 0.4, 0.0),
-            ..default()
-        })
-        .id();
-    let dead = commands
-        .spawn(MaterialMeshBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube::new(0.8))),
-            material: materials.add(material_from_color(palette::DARK_BLACK)),
-            transform: Transform::from_xyz(0.0, 0.4, 0.0),
-            visibility: Visibility { is_visible: false },
             ..default()
         })
         .id();
@@ -64,10 +56,10 @@ fn setup(
         TransformBundle::from_transform(Transform::from_xyz(0.0, HIDDEN_HEIGHT, 0.0)),
         VisibilityBundle::default(),
         Position::from_xy(0, 0),
-        Player::new(alive, dead),
+        Player::new(model),
         Phases::new(BoardMode::Hidden),
     );
-    commands.spawn(root).push_children(&[alive, dead]);
+    commands.spawn(root).push_children(&[model]);
 }
 
 fn enter_setup(
@@ -83,14 +75,24 @@ fn enter_setup(
         Phase::new(BoardMode::Entering, 1.0), // 1.4
         Phase::new(BoardMode::Shown, 0.0),    // final
     ]);
-    let mut handle = material_query.get_mut(player.alive).unwrap();
-    *handle = materials.add(material_from_color(PLAYER_COLORS[player.color]));
+    let mut handle = material_query.get_mut(player.model).unwrap();
+    *handle = materials.add(material_from_color(PLAYER_ALIVE_COLORS[player.color]));
     let mut color = player.color;
     while color == player.color {
-        color = fastrand::usize(..PLAYER_COLORS.len());
+        color = fastrand::usize(..PLAYER_ALIVE_COLORS.len());
     }
     player.color = color;
     health.dead = false;
+}
+
+fn enter_defeat(
+    player_query: Query<&Player>,
+    mut material_query: Query<&mut Handle<StandardMaterial>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    let player = player_query.single();
+    let mut handle = material_query.get_mut(player.model).unwrap();
+    *handle = materials.add(material_from_color(PLAYER_DEAD_COLOR));
 }
 
 fn enter_teardown(mut query: Query<(&Position, &mut Phases<BoardMode>), With<Player>>) {
@@ -110,16 +112,14 @@ pub struct Health {
 
 #[derive(Component)]
 pub struct Player {
-    alive: Entity,
-    dead: Entity,
+    model: Entity,
     color: usize,
 }
 
 impl Player {
-    pub fn new(alive: Entity, dead: Entity) -> Self {
+    pub fn new(alive: Entity) -> Self {
         Self {
-            alive,
-            dead,
+            model: alive,
             color: 0,
         }
     }
@@ -152,16 +152,4 @@ fn defeat(health: Res<Health>, mut state: ResMut<State<AppState>>) {
     if health.dead {
         state.overwrite_set(AppState::Defeat).unwrap();
     }
-}
-
-fn health_visuals(
-    player_query: Query<&Player>,
-    mut visibility_query: Query<&mut Visibility>,
-    health: Res<Health>,
-) {
-    let player = player_query.single();
-    let mut alive_visibility = visibility_query.get_mut(player.alive).unwrap();
-    alive_visibility.is_visible = !health.dead;
-    let mut dead_visibility = visibility_query.get_mut(player.dead).unwrap();
-    dead_visibility.is_visible = health.dead;
 }
