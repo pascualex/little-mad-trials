@@ -160,6 +160,17 @@ fn setup(
     ));
     commands.spawn((
         MaterialMeshBundle {
+            mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(40.0, 40.0)))),
+            material: materials.add(material_from_color(palette::DARK_PINK)),
+            transform: Transform::from_xyz(0.0, -4.0, 10.0)
+                .with_rotation(Quat::from_rotation_x(-PI / 2.0)),
+            ..default()
+        },
+        NotShadowCaster,
+        NotShadowReceiver,
+    ));
+    commands.spawn((
+        MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(1000.0, 1000.0)))),
             material: materials.add(material_from_color(palette::DARK_BLACK)),
             transform: Transform::from_xyz(0.0, -30.0, 0.0)
