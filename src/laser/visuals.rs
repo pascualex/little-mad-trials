@@ -5,6 +5,7 @@ use bevy::{
 
 use crate::{
     laser::LaserMode,
+    material_from_color,
     phases::{self, Phases},
     player::Player,
     post_processing::PostProcessing,
@@ -29,25 +30,13 @@ pub fn turrets_blueprint(
     let root = (TransformBundle::default(), VisibilityBundle::default());
     let top = MaterialMeshBundle {
         mesh: meshes.add(Mesh::from(shape::Box::new(0.3, 0.3, 0.6))),
-        material: materials.add(StandardMaterial {
-            base_color: color,
-            metallic: 0.1,
-            perceptual_roughness: 0.7,
-            reflectance: 0.3,
-            ..default()
-        }),
+        material: materials.add(material_from_color(color)),
         transform: Transform::from_xyz(0.0, 0.0, 2.0),
         ..default()
     };
     let bottom = MaterialMeshBundle {
         mesh: meshes.add(Mesh::from(shape::Box::new(0.3, 0.3, 0.6))),
-        material: materials.add(StandardMaterial {
-            base_color: color,
-            metallic: 0.1,
-            perceptual_roughness: 0.7,
-            reflectance: 0.3,
-            ..default()
-        }),
+        material: materials.add(material_from_color(color)),
         transform: Transform::from_xyz(0.0, 0.0, -2.0),
         ..default()
     };
@@ -68,13 +57,7 @@ pub fn ray_blueprint(
     let root = (
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Box::new(0.1, 0.1, 4.0))),
-            material: materials.add(StandardMaterial {
-                base_color: Color::rgb(1.0, 0.15, 0.18) * 2.0,
-                metallic: 0.1,
-                perceptual_roughness: 0.7,
-                reflectance: 0.3,
-                ..default()
-            }),
+            material: materials.add(material_from_color(Color::rgb(1.0, 0.15, 0.18) * 2.0)),
             transform: Transform::from_xyz(0.0, 0.0, 0.0),
             visibility: Visibility { is_visible: false },
             ..default()

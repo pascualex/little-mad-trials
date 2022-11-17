@@ -2,6 +2,7 @@ use std::{f32::consts::PI, time::Duration};
 
 use bevy::{
     core_pipeline::clear_color::ClearColorConfig,
+    pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
     render::{
         camera::RenderTarget,
@@ -12,7 +13,7 @@ use bevy::{
     },
 };
 
-use crate::{palette, AppState};
+use crate::{material_from_color, palette, AppState};
 
 pub struct BackgroundPlugin;
 
@@ -56,6 +57,7 @@ fn setup(
 ) {
     screen_ui(&mut commands, &asset_server);
 
+    // screen render texture
     let size = Extent3d {
         width: 512,
         height: 350,
@@ -78,6 +80,7 @@ fn setup(
     image.resize(size);
     let handle = images.add(image);
 
+    // screen camera
     commands.spawn((Camera2dBundle {
         camera_2d: Camera2d {
             clear_color: ClearColorConfig::Custom(Color::NONE),
@@ -90,27 +93,16 @@ fn setup(
         ..default()
     },));
 
+    // screen image
     commands.spawn(MaterialMeshBundle {
         mesh: meshes.add(Mesh::from(shape::Box::new(4.25, 2.50, 0.1))),
-        material: materials.add(StandardMaterial {
-            base_color: palette::DARK_BLACK,
-            metallic: 0.1,
-            perceptual_roughness: 0.7,
-            reflectance: 0.3,
-            ..default()
-        }),
+        material: materials.add(material_from_color(palette::DARK_BLACK)),
         transform: Transform::from_xyz(0.0, 4.0, -7.0),
         ..default()
     });
     commands.spawn(MaterialMeshBundle {
         mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(4.0, 2.25)))),
-        material: materials.add(StandardMaterial {
-            base_color: palette::LIGHT_WHITE * 1.8,
-            metallic: 0.1,
-            perceptual_roughness: 0.7,
-            reflectance: 0.3,
-            ..default()
-        }),
+        material: materials.add(material_from_color(palette::LIGHT_WHITE * 1.8)),
         transform: Transform::from_xyz(0.0, 4.0, -6.94),
         ..default()
     });
@@ -118,15 +110,56 @@ fn setup(
         mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(4.0, 2.25)))),
         material: materials.add(StandardMaterial {
             base_color_texture: Some(handle),
-            metallic: 0.1,
-            perceptual_roughness: 0.7,
-            reflectance: 0.3,
             alpha_mode: AlphaMode::Blend,
-            ..default()
+            ..material_from_color(Color::WHITE)
         }),
         transform: Transform::from_xyz(0.0, 4.0, -6.93),
         ..default()
     });
+
+    // walls
+    commands.spawn((
+        MaterialMeshBundle {
+            mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(1000.0, 1000.0)))),
+            material: materials.add(material_from_color(palette::LIGHT_WHITE)),
+            transform: Transform::from_xyz(0.0, 0.0, -10.0),
+            ..default()
+        },
+        NotShadowCaster,
+    ));
+    commands.spawn((
+        MaterialMeshBundle {
+            mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(1000.0, 1000.0)))),
+            material: materials.add(material_from_color(palette::LIGHT_WHITE * 0.9)),
+            transform: Transform::from_xyz(-20.0, 0.0, 0.0)
+                .with_rotation(Quat::from_rotation_y(PI / 2.0)),
+            ..default()
+        },
+        NotShadowCaster,
+        NotShadowReceiver,
+    ));
+    commands.spawn((
+        MaterialMeshBundle {
+            mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(1000.0, 1000.0)))),
+            material: materials.add(material_from_color(palette::LIGHT_WHITE * 0.9)),
+            transform: Transform::from_xyz(20.0, 0.0, 0.0)
+                .with_rotation(Quat::from_rotation_y(-PI / 2.0)),
+            ..default()
+        },
+        NotShadowCaster,
+        NotShadowReceiver,
+    ));
+    commands.spawn((
+        MaterialMeshBundle {
+            mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(1000.0, 1000.0)))),
+            material: materials.add(material_from_color(palette::DARK_BLACK)),
+            transform: Transform::from_xyz(0.0, -30.0, 0.0)
+                .with_rotation(Quat::from_rotation_x(-PI / 2.0)),
+            ..default()
+        },
+        NotShadowCaster,
+        NotShadowReceiver,
+    ));
 }
 
 fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {

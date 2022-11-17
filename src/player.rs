@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     board::{Board, BoardMode, Position, HIDDEN_HEIGHT},
-    laser, palette,
+    laser, material_from_color, palette,
     phases::{Phase, Phases},
     AppState,
 };
@@ -46,13 +46,7 @@ fn setup(
     let alive = commands
         .spawn(MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Cube::new(0.8))),
-            material: materials.add(StandardMaterial {
-                base_color: PLAYER_COLORS[0],
-                metallic: 0.1,
-                perceptual_roughness: 0.7,
-                reflectance: 0.3,
-                ..default()
-            }),
+            material: materials.add(material_from_color(PLAYER_COLORS[0])),
             transform: Transform::from_xyz(0.0, 0.4, 0.0),
             ..default()
         })
@@ -60,13 +54,7 @@ fn setup(
     let dead = commands
         .spawn(MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Cube::new(0.8))),
-            material: materials.add(StandardMaterial {
-                base_color: palette::DARK_BLACK,
-                metallic: 0.1,
-                perceptual_roughness: 0.7,
-                reflectance: 0.3,
-                ..default()
-            }),
+            material: materials.add(material_from_color(palette::DARK_BLACK)),
             transform: Transform::from_xyz(0.0, 0.4, 0.0),
             visibility: Visibility { is_visible: false },
             ..default()
@@ -96,13 +84,7 @@ fn enter_setup(
         Phase::new(BoardMode::Shown, 0.0),    // final
     ]);
     let mut handle = material_query.get_mut(player.alive).unwrap();
-    *handle = materials.add(StandardMaterial {
-        base_color: PLAYER_COLORS[player.color],
-        metallic: 0.1,
-        perceptual_roughness: 0.7,
-        reflectance: 0.3,
-        ..default()
-    });
+    *handle = materials.add(material_from_color(PLAYER_COLORS[player.color]));
     let mut color = player.color;
     while color == player.color {
         color = fastrand::usize(..PLAYER_COLORS.len());

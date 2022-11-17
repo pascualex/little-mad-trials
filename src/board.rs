@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use bevy::{prelude::*, utils::HashSet};
 
 use crate::{
-    background, palette,
+    background, material_from_color, palette,
     phases::{self, Phase, Phases},
     AppState,
 };
@@ -32,13 +32,7 @@ fn setup(
 ) {
     let model = MaterialMeshBundle {
         mesh: meshes.add(Mesh::from(shape::Box::new(0.92, 40.0, 0.92))),
-        material: materials.add(StandardMaterial {
-            base_color: palette::LIGHT_WHITE,
-            metallic: 0.1,
-            perceptual_roughness: 0.7,
-            reflectance: 0.3,
-            ..default()
-        }),
+        material: materials.add(material_from_color(palette::LIGHT_WHITE)),
         transform: Transform::from_xyz(0.0, -20.0, 0.0),
         ..default()
     };
