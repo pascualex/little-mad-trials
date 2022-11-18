@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    board::{Board, BoardMode, Position, HIDDEN_HEIGHT},
+    board::{AnimatedHeight, Board, BoardMode, Position, HIDDEN_HEIGHT},
     laser, material_from_color, palette,
     phases::{Phase, Phases},
     AppState,
@@ -58,6 +58,7 @@ fn setup(
         Position::from_xy(0, 0),
         Player::new(model),
         Phases::new(BoardMode::Hidden),
+        AnimatedHeight::default(),
     );
     commands.spawn(root).push_children(&[model]);
 }
