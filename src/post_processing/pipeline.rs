@@ -17,9 +17,7 @@ use bevy::{
     },
 };
 
-use crate::post_processing::{PostProcessing, POST_PROCESSING_SHADER_HANDLE};
-
-use super::PostProcessingParams;
+use crate::post_processing::{PostProcessing, PostProcessingParams, POST_PROCESSING_SHADER_HANDLE};
 
 #[derive(Resource, Deref)]
 pub struct PostProcessingPipeline {
