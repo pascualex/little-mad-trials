@@ -1,4 +1,4 @@
-use std::{f32::consts::PI, time::Duration};
+use std::f32::consts::PI;
 
 use bevy::{
     pbr::{NotShadowCaster, NotShadowReceiver},
@@ -7,7 +7,7 @@ use bevy::{
 
 use crate::{
     background::Countdown,
-    laser::LaserMode,
+    laser::{Laser, LaserMode},
     material_from_color,
     phases::{self, Phases},
     player::Player,
@@ -98,14 +98,16 @@ pub fn ray_blueprint(
 #[derive(Component)]
 pub struct Visuals {
     pub normal: Entity,
+    pub fast: Entity,
     pub charging: Entity,
     pub ray: Entity,
 }
 
 impl Visuals {
-    pub fn new(normal: Entity, charging: Entity, ray: Entity) -> Self {
+    pub fn new(normal: Entity, fast: Entity, charging: Entity, ray: Entity) -> Self {
         Self {
             normal,
+            fast,
             charging,
             ray,
         }
@@ -113,13 +115,15 @@ impl Visuals {
 }
 
 fn charge(
-    laser_query: Query<(&Phases<LaserMode>, &Visuals)>,
+    laser_query: Query<(&Laser, &Phases<LaserMode>, &Visuals)>,
     mut visibility_query: Query<&mut Visibility>,
 ) {
-    for (phases, models) in &laser_query {
+    for (laser, phases, models) in &laser_query {
         let charging = matches!(phases.mode(), LaserMode::Charging | LaserMode::Shooting);
         let mut normal_visibility = visibility_query.get_mut(models.normal).unwrap();
-        normal_visibility.is_visible = !charging;
+        normal_visibility.is_visible = !charging && !laser.fast;
+        let mut fast_visibility = visibility_query.get_mut(models.fast).unwrap();
+        fast_visibility.is_visible = !charging && laser.fast;
         let mut charging_visibility = visibility_query.get_mut(models.charging).unwrap();
         charging_visibility.is_visible = charging;
     }
@@ -139,9 +143,8 @@ fn attack(
         shooters += shooting as i32;
     }
     let mut post_processing = post_processing_query.single_mut();
-    let final_phase = countdown.timer.elapsed() >= Duration::from_secs_f32(16.0);
     post_processing.aberration = match shooters > 0 {
-        true => match final_phase && shooters >= 3 {
+        true => match countdown.timer.elapsed_secs() >= 16.0 && shooters >= 3 {
             true => HIGH_CHROMATIC_ABERRATION,
             false => MEDIUM_CHROMATIC_ABERRATION,
         },

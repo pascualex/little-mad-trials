@@ -6,7 +6,7 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 
 use crate::{
-    background,
+    background::{self, Countdown},
     board::{AnimatedHeight, BoardMode, Position, HIDDEN_HEIGHT},
     palette,
     phases::{self, Phase, Phases},
@@ -34,7 +34,8 @@ impl Plugin for LaserPlugin {
             .add_system_set(
                 SystemSet::on_update(AppState::Game)
                     .with_system(movement.after(phases::transition::<LaserMode>))
-                    .with_system(attack.after(movement).after(player::movement)),
+                    .with_system(attack.after(movement).after(player::movement))
+                    .with_system(fast_mode.after(background::countdown)),
             )
             .add_system_set(SystemSet::on_enter(AppState::Victory).with_system(enter_victory))
             .add_system_set(SystemSet::on_enter(AppState::Teardown).with_system(enter_teardown))
@@ -94,6 +95,13 @@ fn laser(
         Axis::Vertical => 0.0,
     };
     let normal = turrets_blueprint(mobile, commands, palette::DARK_YELLOW, meshes, materials);
+    let fast = turrets_blueprint(
+        mobile,
+        commands,
+        Color::rgb_u8(252, 142, 73),
+        meshes,
+        materials,
+    );
     let charging = turrets_blueprint(mobile, commands, palette::DARK_RED, meshes, materials);
     let ray = ray_blueprint(commands, meshes, materials);
     let model = (
@@ -107,28 +115,31 @@ fn laser(
         VisibilityBundle::default(),
         Position::new(position),
         Laser::new(axis, mobile),
-        Visuals::new(normal, charging, ray),
+        Visuals::new(normal, fast, charging, ray),
         Phases::new(BoardMode::Hidden),
         Phases::new(LaserMode::Ready),
         AnimatedHeight::new(),
     );
     commands.spawn(root).with_children(|builder| {
-        builder.spawn(model).push_children(&[normal, charging, ray]);
+        builder
+            .spawn(model)
+            .push_children(&[normal, fast, charging, ray]);
     });
 }
 
 fn enter_setup(
     mut query: Query<(
         &mut Position,
-        &Laser,
+        &mut Laser,
         &mut Phases<BoardMode>,
         &mut Phases<LaserMode>,
     )>,
 ) {
-    for (mut position, laser, mut board_phases, mut laser_phases) in &mut query {
+    for (mut position, mut laser, mut board_phases, mut laser_phases) in &mut query {
         if laser.mobile {
             position.vec = IVec2::ZERO;
         };
+        laser.fast = false;
         let vec = match laser.mobile {
             true => vec![
                 Phase::new(BoardMode::Waiting, 0.4),  // 0.4
@@ -207,11 +218,16 @@ fn enter_teardown(mut query: Query<(&mut Phases<BoardMode>, &mut Phases<LaserMod
 pub struct Laser {
     pub axis: Axis,
     pub mobile: bool,
+    pub fast: bool,
 }
 
 impl Laser {
     pub fn new(axis: Axis, mobile: bool) -> Self {
-        Self { axis, mobile }
+        Self {
+            axis,
+            mobile,
+            fast: false,
+        }
     }
 }
 
@@ -256,5 +272,15 @@ pub fn attack(
         if matches!(phases.mode(), LaserMode::Shooting) && aligned {
             health.dead = true;
         }
+    }
+}
+
+pub fn fast_mode(mut query: Query<&mut Laser>, countdown: Res<Countdown>) {
+    for mut laser in &mut query {
+        let threshold = match laser.axis {
+            Axis::Horizontal => 11.8,
+            Axis::Vertical => 8.1,
+        };
+        laser.fast = countdown.timer.elapsed_secs() >= threshold;
     }
 }
