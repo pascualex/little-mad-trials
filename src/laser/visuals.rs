@@ -20,7 +20,8 @@ pub struct VisualsPlugin;
 impl Plugin for VisualsPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(charge.after(phases::transition::<LaserMode>))
-            .add_system(attack.after(phases::transition::<LaserMode>));
+            .add_system(attack.after(phases::transition::<LaserMode>))
+            .add_system(attack_sound.after(phases::transition::<LaserMode>));
     }
 }
 
@@ -119,7 +120,7 @@ fn charge(
     mut visibility_query: Query<&mut Visibility>,
 ) {
     for (laser, phases, models) in &laser_query {
-        let charging = matches!(phases.mode(), LaserMode::Charging | LaserMode::Shooting);
+        let charging = matches!(phases.mode(), LaserMode::Charging | LaserMode::Attacking);
         let mut normal_visibility = visibility_query.get_mut(models.normal).unwrap();
         normal_visibility.is_visible = !charging && !laser.fast;
         let mut fast_visibility = visibility_query.get_mut(models.fast).unwrap();
@@ -137,7 +138,7 @@ fn attack(
 ) {
     let mut shooters = 0;
     for (phases, visuals) in &laser_query {
-        let shooting = matches!(phases.mode(), LaserMode::Shooting);
+        let shooting = matches!(phases.mode(), LaserMode::Attacking);
         let mut visibility = visibility_query.get_mut(visuals.ray).unwrap();
         visibility.is_visible = shooting;
         shooters += shooting as i32;
@@ -150,4 +151,22 @@ fn attack(
         },
         false => LOW_CHROMATIC_ABERRATION,
     };
+}
+
+pub fn attack_sound(
+    query: Query<(&Laser, &Phases<LaserMode>)>,
+    asset_server: Res<AssetServer>,
+    audio: Res<Audio>,
+) {
+    for (laser, phases) in &query {
+        if laser.mobile && phases.just_transitioned {
+            let (path, volume) = match phases.mode() {
+                LaserMode::Charging => ("sounds/charge.ogg", 0.1),
+                LaserMode::Attacking => ("sounds/attack.ogg", 0.2),
+                LaserMode::Ready => continue,
+            };
+            let sound = asset_server.load(path);
+            audio.play_with_settings(sound, PlaybackSettings::ONCE.with_volume(volume));
+        }
+    }
 }

@@ -90,10 +90,14 @@ fn enter_defeat(
     player_query: Query<&Player>,
     mut material_query: Query<&mut Handle<StandardMaterial>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    asset_server: Res<AssetServer>,
+    audio: Res<Audio>,
 ) {
     let player = player_query.single();
     let mut handle = material_query.get_mut(player.model).unwrap();
     *handle = materials.add(material_from_color(PLAYER_DEAD_COLOR));
+    let sound = asset_server.load("sounds/defeat.ogg");
+    audio.play_with_settings(sound, PlaybackSettings::ONCE.with_volume(0.6));
 }
 
 fn enter_teardown(mut query: Query<(&Position, &mut Phases<BoardMode>), With<Player>>) {
@@ -130,15 +134,22 @@ pub fn movement(
     mut query: Query<&mut Position, With<Player>>,
     board: Res<Board>,
     input: Res<Input<KeyCode>>,
+    asset_server: Res<AssetServer>,
+    audio: Res<Audio>,
 ) {
     let direction = IVec2::new(
         input.just_pressed(KeyCode::Right) as i32 - input.just_pressed(KeyCode::Left) as i32,
         input.just_pressed(KeyCode::Up) as i32 - input.just_pressed(KeyCode::Down) as i32,
     );
+    if direction == IVec2::ZERO {
+        return;
+    }
     let mut position = query.single_mut();
     let new_position = position.vec + direction;
     if board.tiles.contains(&new_position) {
         position.vec = new_position;
+        let sound = asset_server.load("sounds/step.ogg");
+        audio.play_with_settings(sound, PlaybackSettings::ONCE.with_volume(0.05));
     }
 }
 
