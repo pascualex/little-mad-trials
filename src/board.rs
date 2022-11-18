@@ -45,6 +45,7 @@ fn setup(
                 VisibilityBundle::default(),
                 Tile,
                 Phases::new(BoardMode::Hidden),
+                AnimatedHeight::new(),
             );
             commands.spawn(root).with_children(|builder| {
                 builder.spawn(model.clone());
@@ -89,6 +90,17 @@ pub struct Position {
 #[derive(Component)]
 pub struct Tile;
 
+#[derive(Component, Default)]
+pub struct AnimatedHeight {
+    progress: f32,
+}
+
+impl AnimatedHeight {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
 #[derive(Clone, Copy)]
 pub enum BoardMode {
     Hidden,
@@ -117,19 +129,16 @@ fn to_world_xz(mut query: Query<(&mut Transform, &Position)>) {
     }
 }
 
-fn to_world_y(mut query: Query<(&mut Transform, &Phases<BoardMode>)>) {
-    for (mut transform, phases) in &mut query {
-        let y = transform.translation.y;
-        transform.translation.y = match phases.mode() {
-            BoardMode::Hidden => HIDDEN_HEIGHT,
-            BoardMode::Entering => HIDDEN_HEIGHT * ease(1.0 - phases.progress),
-            BoardMode::Shown => 0.0,
-            BoardMode::Exiting => match (HIDDEN_HEIGHT..0.0).contains(&y) {
-                true => f32::min(HIDDEN_HEIGHT * ease(phases.progress), y),
-                false => HIDDEN_HEIGHT * ease(phases.progress),
-            },
-            BoardMode::Waiting => y,
+fn to_world_y(mut query: Query<(&mut Transform, &Phases<BoardMode>, &mut AnimatedHeight)>) {
+    for (mut transform, phases, mut animated_height) in &mut query {
+        animated_height.progress = match phases.mode() {
+            BoardMode::Hidden => 0.0,
+            BoardMode::Entering => f32::max(phases.progress, animated_height.progress),
+            BoardMode::Shown => 1.0,
+            BoardMode::Exiting => f32::min(1.0 - phases.progress, animated_height.progress),
+            BoardMode::Waiting => continue,
         };
+        transform.translation.y = HIDDEN_HEIGHT * ease(1.0 - animated_height.progress);
     }
 }
 

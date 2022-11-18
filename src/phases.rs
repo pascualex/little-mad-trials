@@ -64,16 +64,14 @@ pub fn transition<T: Send + Sync>(mut query: Query<&mut Phases<T>>, countdown: R
             phases.start += duration;
             phases.vec.remove(0);
         }
-        let progress = match countdown.timer.elapsed() >= phases.start {
+        let elapsed = match countdown.timer.elapsed() >= phases.start {
             true => countdown.timer.elapsed() - phases.start,
             false => Duration::ZERO,
         };
-        phases.progress = match phases.vec.first() {
-            Some(phase) => match phase.duration {
-                Duration::ZERO => 1.0,
-                _ => f32::min(progress.as_secs_f32() / phase.duration.as_secs_f32(), 1.0),
-            },
-            None => 1.0,
+        let duration = phases.vec.first().unwrap().duration;
+        phases.progress = match duration {
+            Duration::ZERO => 1.0,
+            _ => f32::min(elapsed.as_secs_f32() / duration.as_secs_f32(), 1.0),
         };
     }
 }
