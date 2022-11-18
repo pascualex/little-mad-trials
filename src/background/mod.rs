@@ -42,7 +42,8 @@ impl Plugin for BackgroundPlugin {
                 SystemSet::on_update(AppState::Teardown)
                     .with_system(countdown)
                     .with_system(transition.after(countdown)),
-            );
+            )
+            .add_system_set(SystemSet::on_exit(AppState::Teardown).with_system(exit_teardown));
     }
 }
 
@@ -124,6 +125,11 @@ fn enter_victory(
 
 fn enter_teardown(mut countdown: ResMut<Countdown>) {
     countdown.reset(1.5, Some(AppState::Setup));
+}
+
+fn exit_teardown(asset_server: Res<AssetServer>, audio: Res<Audio>) {
+    let sound = asset_server.load("sounds/reset.ogg");
+    audio.play_with_settings(sound, PlaybackSettings::ONCE.with_volume(0.15));
 }
 
 #[derive(Resource)]
