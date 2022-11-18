@@ -31,7 +31,6 @@ impl Plugin for AppPlugin {
             .add_plugin(PostProcessingPlugin)
             .add_startup_system(setup)
             .add_system_set(SystemSet::on_update(AppState::Splash).with_system(start))
-            .add_system_set(SystemSet::on_update(AppState::Game).with_system(instant_victory))
             .add_system_set(SystemSet::on_update(AppState::Defeat).with_system(restart))
             .add_system_set(SystemSet::on_update(AppState::Victory).with_system(restart));
     }
@@ -98,13 +97,6 @@ fn start(mut input: ResMut<Input<KeyCode>>, mut state: ResMut<State<AppState>>) 
 fn restart(mut input: ResMut<Input<KeyCode>>, mut state: ResMut<State<AppState>>) {
     if input.just_pressed(KeyCode::Space) {
         state.overwrite_set(AppState::Teardown).unwrap();
-        input.clear(); // avoids infinite loops until stageless
-    }
-}
-
-fn instant_victory(mut input: ResMut<Input<KeyCode>>, mut state: ResMut<State<AppState>>) {
-    if input.just_pressed(KeyCode::V) {
-        state.overwrite_set(AppState::Victory).unwrap();
         input.clear(); // avoids infinite loops until stageless
     }
 }
