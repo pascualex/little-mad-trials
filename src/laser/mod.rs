@@ -236,11 +236,11 @@ pub enum Axis {
     Vertical,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum LaserMode {
     Ready,
     Charging,
-    Shooting,
+    Attacking,
 }
 
 fn movement(
@@ -269,7 +269,7 @@ pub fn attack(
             Axis::Horizontal => laser_position.vec.y == player_position.vec.y,
             Axis::Vertical => laser_position.vec.x == player_position.vec.x,
         };
-        if matches!(phases.mode(), LaserMode::Shooting) && aligned {
+        if matches!(phases.mode(), LaserMode::Attacking) && aligned {
             health.dead = true;
         }
     }
@@ -277,10 +277,6 @@ pub fn attack(
 
 pub fn fast_mode(mut query: Query<&mut Laser>, countdown: Res<Countdown>) {
     for mut laser in &mut query {
-        let threshold = match laser.axis {
-            Axis::Horizontal => 11.8,
-            Axis::Vertical => 8.1,
-        };
-        laser.fast = countdown.timer.elapsed_secs() >= threshold;
+        laser.fast = (8.1..20.0).contains(&countdown.timer.elapsed_secs());
     }
 }

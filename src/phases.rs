@@ -15,6 +15,8 @@ pub struct Phases<T: Send + Sync + 'static> {
     pub vec: Vec<Phase<T>>,
     pub start: Duration,
     pub progress: f32,
+    pub just_reset: bool,
+    pub just_transitioned: bool,
 }
 
 impl<T: Clone + Copy + Send + Sync> Phases<T> {
@@ -23,6 +25,8 @@ impl<T: Clone + Copy + Send + Sync> Phases<T> {
             vec: vec![Phase::new(base, 0.0)],
             start: Duration::ZERO,
             progress: 0.0,
+            just_reset: true,
+            just_transitioned: true,
         }
     }
 
@@ -37,6 +41,8 @@ impl<T: Clone + Copy + Send + Sync> Phases<T> {
         self.vec = vec;
         self.start = Duration::ZERO;
         self.progress = 0.0;
+        self.just_reset = true;
+        self.just_transitioned = true;
     }
 }
 
@@ -56,6 +62,10 @@ impl<T> Phase<T> {
 
 pub fn transition<T: Send + Sync>(mut query: Query<&mut Phases<T>>, countdown: Res<Countdown>) {
     for mut phases in &mut query {
+        match phases.just_reset {
+            true => phases.just_reset = false,
+            false => phases.just_transitioned = false,
+        }
         if phases.vec.len() <= 1 {
             continue;
         }
@@ -63,6 +73,7 @@ pub fn transition<T: Send + Sync>(mut query: Query<&mut Phases<T>>, countdown: R
         if countdown.timer.elapsed() >= phases.start + duration || countdown.timer.finished() {
             phases.start += duration;
             phases.vec.remove(0);
+            phases.just_transitioned = true;
         }
         let elapsed = match countdown.timer.elapsed() >= phases.start {
             true => countdown.timer.elapsed() - phases.start,
