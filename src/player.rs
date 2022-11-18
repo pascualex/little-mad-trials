@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    board::{AnimatedHeight, Board, BoardMode, Position, HIDDEN_HEIGHT},
+    board::{Board, BoardMode, Position, HIDDEN_HEIGHT},
     laser, material_from_color, palette,
     phases::{Phase, Phases},
     AppState,
@@ -58,7 +58,6 @@ fn setup(
         Position::from_xy(0, 0),
         Player::new(model),
         Phases::new(BoardMode::Hidden),
-        AnimatedHeight::default(),
     );
     commands.spawn(root).push_children(&[model]);
 }
@@ -90,14 +89,10 @@ fn enter_defeat(
     player_query: Query<&Player>,
     mut material_query: Query<&mut Handle<StandardMaterial>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    asset_server: Res<AssetServer>,
-    audio: Res<Audio>,
 ) {
     let player = player_query.single();
     let mut handle = material_query.get_mut(player.model).unwrap();
     *handle = materials.add(material_from_color(PLAYER_DEAD_COLOR));
-    let sound = asset_server.load("sounds/defeat.ogg");
-    audio.play_with_settings(sound, PlaybackSettings::ONCE.with_volume(0.6));
 }
 
 fn enter_teardown(mut query: Query<(&Position, &mut Phases<BoardMode>), With<Player>>) {
