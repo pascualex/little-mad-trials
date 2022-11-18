@@ -26,7 +26,7 @@ impl Plugin for ScreenPlugin {
             .add_startup_system(setup)
             .add_system_set(
                 SystemSet::on_update(AppState::Game)
-                    .with_system(show_countdown.after(background::countdown)),
+                    .with_system(show_countdown.before(background::countdown)),
             )
             .add_system(show_screen_elements)
             .add_system(flip)

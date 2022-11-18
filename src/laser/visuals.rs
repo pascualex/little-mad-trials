@@ -3,11 +3,12 @@ use std::f32::consts::PI;
 use bevy::{
     pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
+    transform::TransformSystem,
 };
 
 use crate::{
     laser::LaserMode,
-    material_from_color,
+    material_from_color, palette,
     phases::{self, Phases},
     player::Player,
     post_processing::PostProcessing,
@@ -19,11 +20,16 @@ pub struct VisualsPlugin;
 impl Plugin for VisualsPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(charge.after(phases::transition::<LaserMode>))
-            .add_system(attack.after(phases::transition::<LaserMode>));
+            .add_system(attack.after(phases::transition::<LaserMode>))
+            .add_system_to_stage(
+                CoreStage::PostUpdate,
+                lock.after(TransformSystem::TransformPropagate),
+            );
     }
 }
 
 pub fn turrets_blueprint(
+    mobile: bool,
     commands: &mut Commands,
     color: Color,
     meshes: &mut Assets<Mesh>,
@@ -42,11 +48,33 @@ pub fn turrets_blueprint(
         transform: Transform::from_xyz(0.0, 0.0, -2.0),
         ..default()
     };
+    let top_rail = (
+        MaterialMeshBundle {
+            mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.15, 0.15))),
+            material: materials.add(material_from_color(palette::LIGHT_BLACK)),
+            transform: Transform::from_xyz(0.0, 0.0, 2.0),
+            ..default()
+        },
+        Lock,
+    );
+    let bottom_rail = (
+        MaterialMeshBundle {
+            mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.15, 0.15))),
+            material: materials.add(material_from_color(palette::LIGHT_BLACK)),
+            transform: Transform::from_xyz(0.0, 0.0, -2.0),
+            ..default()
+        },
+        Lock,
+    );
     commands
         .spawn(root)
         .with_children(|builder| {
             builder.spawn(top);
             builder.spawn(bottom);
+            if mobile {
+                builder.spawn(top_rail);
+                builder.spawn(bottom_rail);
+            }
         })
         .id()
 }
@@ -94,6 +122,9 @@ impl Visuals {
     }
 }
 
+#[derive(Component)]
+pub struct Lock;
+
 fn charge(
     laser_query: Query<(&Phases<LaserMode>, &Visuals)>,
     mut visibility_query: Query<&mut Visibility>,
@@ -124,4 +155,10 @@ fn attack(
         false => LOW_CHROMATIC_ABERRATION,
         true => HIGH_CHROMATIC_ABERRATION,
     };
+}
+
+fn lock(mut query: Query<&mut GlobalTransform, With<Lock>>) {
+    for mut transform in &mut query {
+        transform.translation_mut().x = 0.0;
+    }
 }
