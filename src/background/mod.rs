@@ -12,6 +12,8 @@ use crate::{material_from_color, palette, AppState};
 
 use self::{fog::FogPlugin, screen::ScreenPlugin};
 
+const WALLS_COLOR: Color = palette::DARK_WHITE;
+
 pub struct BackgroundPlugin;
 
 impl Plugin for BackgroundPlugin {
@@ -53,7 +55,7 @@ fn setup(
     commands.spawn((
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(1000.0, 1000.0)))),
-            material: materials.add(material_from_color(palette::LIGHT_WHITE * 0.75)),
+            material: materials.add(material_from_color(WALLS_COLOR)),
             transform: Transform::from_xyz(0.0, 0.0, -10.0),
             ..default()
         },
@@ -63,7 +65,7 @@ fn setup(
     commands.spawn((
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(1000.0, 1000.0)))),
-            material: materials.add(material_from_color(palette::LIGHT_WHITE * 0.65)),
+            material: materials.add(material_from_color(WALLS_COLOR * 0.9)),
             transform: Transform::from_xyz(-20.0, 0.0, 0.0)
                 .with_rotation(Quat::from_rotation_y(PI / 2.0)),
             ..default()
@@ -75,7 +77,7 @@ fn setup(
     commands.spawn((
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(1000.0, 1000.0)))),
-            material: materials.add(material_from_color(palette::LIGHT_WHITE * 0.65)),
+            material: materials.add(material_from_color(WALLS_COLOR * 0.9)),
             transform: Transform::from_xyz(20.0, 0.0, 0.0)
                 .with_rotation(Quat::from_rotation_y(-PI / 2.0)),
             ..default()

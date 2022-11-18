@@ -8,8 +8,6 @@ use bevy::{
     },
 };
 
-use crate::palette;
-
 pub struct FogPlugin;
 
 impl Plugin for FogPlugin {
@@ -24,12 +22,10 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<FogMaterial>>,
 ) {
-    let mut color = palette::LIGHT_BLACK;
-    color.set_a(0.9);
     commands.spawn((
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(Fog::new(40.0, 100))),
-            material: materials.add(FogMaterial::new(color)),
+            material: materials.add(FogMaterial::new(Color::rgba_u8(138, 88, 126, 230))),
             transform: Transform::from_xyz(0.0, -3.5, 10.0),
             ..default()
         },
