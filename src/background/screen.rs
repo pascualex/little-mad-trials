@@ -26,7 +26,7 @@ impl Plugin for ScreenPlugin {
             .add_startup_system(setup)
             .add_system_set(
                 SystemSet::on_update(AppState::Game)
-                    .with_system(show_countdown.before(background::countdown)),
+                    .with_system(show_countdown.after(background::countdown)),
             )
             .add_system(show_screen_elements)
             .add_system(flip)
@@ -102,8 +102,7 @@ fn setup(
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(4.0, 2.25)))),
             material: materials.add(StandardMaterial {
-                emissive: palette::LIGHT_WHITE * 1.6,
-                ..material_from_color(palette::LIGHT_WHITE)
+                ..material_from_color(palette::LIGHT_WHITE * 1.65)
             }),
             transform: Transform::from_xyz(0.0, 4.0, -6.94),
             ..default()
