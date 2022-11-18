@@ -93,8 +93,8 @@ fn laser(
         Axis::Horizontal => PI / 2.0,
         Axis::Vertical => 0.0,
     };
-    let normal = turrets_blueprint(commands, palette::DARK_YELLOW, meshes, materials);
-    let charging = turrets_blueprint(commands, palette::DARK_RED, meshes, materials);
+    let normal = turrets_blueprint(mobile, commands, palette::DARK_YELLOW, meshes, materials);
+    let charging = turrets_blueprint(mobile, commands, palette::DARK_RED, meshes, materials);
     let ray = ray_blueprint(commands, meshes, materials);
     let model = (
         TransformBundle::from_transform(

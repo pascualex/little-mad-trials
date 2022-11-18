@@ -110,13 +110,3 @@ pub fn material_from_color(color: Color) -> StandardMaterial {
         ..default()
     }
 }
-
-pub fn material_from_texture(image: Handle<Image>) -> StandardMaterial {
-    StandardMaterial {
-        base_color_texture: Some(image),
-        metallic: 0.1,
-        perceptual_roughness: 0.7,
-        reflectance: 0.3,
-        ..default()
-    }
-}
