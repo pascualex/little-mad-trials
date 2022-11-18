@@ -7,7 +7,7 @@ use bevy::prelude::*;
 
 use crate::{
     background::{self, Countdown},
-    board::{AnimatedHeight, BoardMode, Position, HIDDEN_HEIGHT},
+    board::{BoardMode, Position, HIDDEN_HEIGHT},
     palette,
     phases::{self, Phase, Phases},
     player::{self, Health, Player},
@@ -118,7 +118,6 @@ fn laser(
         Visuals::new(normal, fast, charging, ray),
         Phases::new(BoardMode::Hidden),
         Phases::new(LaserMode::Ready),
-        AnimatedHeight::new(),
     );
     commands.spawn(root).with_children(|builder| {
         builder

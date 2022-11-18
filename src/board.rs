@@ -45,7 +45,6 @@ fn setup(
                 VisibilityBundle::default(),
                 Tile,
                 Phases::new(BoardMode::Hidden),
-                AnimatedHeight::new(),
             );
             commands.spawn(root).with_children(|builder| {
                 builder.spawn(model.clone());
@@ -90,17 +89,6 @@ pub struct Position {
 #[derive(Component)]
 pub struct Tile;
 
-#[derive(Component, Default)]
-pub struct AnimatedHeight {
-    progress: f32,
-}
-
-impl AnimatedHeight {
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
-
 #[derive(Clone, Copy)]
 pub enum BoardMode {
     Hidden,
@@ -129,16 +117,24 @@ fn to_world_xz(mut query: Query<(&mut Transform, &Position)>) {
     }
 }
 
-fn to_world_y(mut query: Query<(&mut Transform, &Phases<BoardMode>, &mut AnimatedHeight)>) {
-    for (mut transform, phases, mut animated_height) in &mut query {
-        animated_height.progress = match phases.mode() {
-            BoardMode::Hidden => 0.0,
-            BoardMode::Entering => f32::max(phases.progress, animated_height.progress),
-            BoardMode::Shown => 1.0,
-            BoardMode::Exiting => f32::min(1.0 - phases.progress, animated_height.progress),
-            BoardMode::Waiting => continue,
+fn to_world_y(mut query: Query<(&mut Transform, &Phases<BoardMode>)>) {
+    for (mut transform, phases) in &mut query {
+        let old_y = transform.translation.y;
+        transform.translation.y = match phases.mode() {
+            BoardMode::Hidden => HIDDEN_HEIGHT,
+            BoardMode::Entering => HIDDEN_HEIGHT * (1.0 - ease(phases.progress)),
+            BoardMode::Shown => 0.0,
+            BoardMode::Exiting => {
+                let new_y = HIDDEN_HEIGHT * ease(phases.progress);
+                let both_above = old_y >= 0.0 && new_y >= 0.0;
+                let both_bellow = old_y <= HIDDEN_HEIGHT && new_y <= HIDDEN_HEIGHT;
+                match both_above || both_bellow {
+                    true => new_y,
+                    false => f32::min(old_y, new_y),
+                }
+            }
+            BoardMode::Waiting => old_y,
         };
-        transform.translation.y = HIDDEN_HEIGHT * ease(1.0 - animated_height.progress);
     }
 }
 
