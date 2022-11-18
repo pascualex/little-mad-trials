@@ -25,12 +25,9 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4<f32> {
     );
 
     // vignette
-    var dither = vec3<f32>(dot(vec2<f32>(171.0, 231.0), uv.xy * 1000.0)).xxx;
-    dither = fract(dither.rgb / vec3<f32>(103.0, 71.0, 97.0)) / 100.0;
-    let f_dither = dither.x + dither.y + dither.z;
-    let centricity = min((uv.x * (1.0 - uv.x) * uv.y * (1.0 - uv.y) * 10.0), 1.0);
-    let intensity = pow(centricity, 0.15);
-    let vignette_output = aberration_output * (intensity + f_dither);
+    let centricity = min((uv.x * (1.0 - uv.x) * uv.y * (1.0 - uv.y) * 15.0), 1.0);
+    let intensity = 0.15 + 0.85 * pow(centricity, 0.5);
+    let vignette_output = aberration_output * intensity;
 
     return vec4<f32>(vignette_output, 1.0);
 }
