@@ -24,14 +24,13 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<FogMaterial>>,
 ) {
+    let mut color = palette::LIGHT_BLACK;
+    color.set_a(0.9);
     commands.spawn((
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(Fog::new(40.0, 100))),
-            material: materials.add(FogMaterial {
-                color: palette::DARK_PINK,
-                alpha_mode: AlphaMode::Blend,
-            }),
-            transform: Transform::from_xyz(0.0, -4.0, 10.0),
+            material: materials.add(FogMaterial::new(color)),
+            transform: Transform::from_xyz(0.0, -3.5, 10.0),
             ..default()
         },
         NotShadowCaster,
@@ -44,16 +43,25 @@ fn setup(
 struct FogMaterial {
     #[uniform(0)]
     color: Color,
-    alpha_mode: AlphaMode,
+}
+
+impl FogMaterial {
+    fn new(color: Color) -> Self {
+        Self { color }
+    }
 }
 
 impl Material for FogMaterial {
-    fn fragment_shader() -> ShaderRef {
+    fn alpha_mode(&self) -> AlphaMode {
+        AlphaMode::Blend
+    }
+
+    fn vertex_shader() -> ShaderRef {
         "shaders/fog.wgsl".into()
     }
 
-    fn alpha_mode(&self) -> AlphaMode {
-        self.alpha_mode
+    fn fragment_shader() -> ShaderRef {
+        "shaders/fog.wgsl".into()
     }
 }
 
