@@ -189,8 +189,18 @@ fn enter_start(
     }
 }
 
-fn enter_victory(mut query: Query<(&mut Phases<BoardMode>, &mut Phases<LaserMode>), With<Laser>>) {
-    for (mut board_phases, mut laser_phases) in &mut query {
+fn enter_victory(
+    mut query: Query<(
+        &mut Position,
+        &Laser,
+        &mut Phases<BoardMode>,
+        &mut Phases<LaserMode>,
+    )>,
+) {
+    for (mut position, laser, mut board_phases, mut laser_phases) in &mut query {
+        if laser.mobile {
+            position.vec.x = 0;
+        }
         board_phases.reset(vec![
             Phase::new(BoardMode::Exiting, 1.0),
             Phase::new(BoardMode::Hidden, 0.0), // final
