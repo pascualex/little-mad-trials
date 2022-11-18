@@ -1,4 +1,4 @@
-use std::f32::consts::PI;
+use std::{f32::consts::PI, time::Duration};
 
 use bevy::{
     pbr::{NotShadowCaster, NotShadowReceiver},
@@ -6,12 +6,13 @@ use bevy::{
 };
 
 use crate::{
+    background::Countdown,
     laser::LaserMode,
     material_from_color,
     phases::{self, Phases},
     player::Player,
     post_processing::PostProcessing,
-    HIGH_CHROMATIC_ABERRATION, LOW_CHROMATIC_ABERRATION,
+    HIGH_CHROMATIC_ABERRATION, LOW_CHROMATIC_ABERRATION, MEDIUM_CHROMATIC_ABERRATION,
 };
 
 pub struct VisualsPlugin;
@@ -128,17 +129,22 @@ fn attack(
     laser_query: Query<(&Phases<LaserMode>, &Visuals), Without<Player>>,
     mut visibility_query: Query<&mut Visibility>,
     mut post_processing_query: Query<&mut PostProcessing>,
+    countdown: Res<Countdown>,
 ) {
-    let mut any_shooting = false;
+    let mut shooters = 0;
     for (phases, visuals) in &laser_query {
         let shooting = matches!(phases.mode(), LaserMode::Shooting);
         let mut visibility = visibility_query.get_mut(visuals.ray).unwrap();
         visibility.is_visible = shooting;
-        any_shooting |= shooting;
+        shooters += shooting as i32;
     }
     let mut post_processing = post_processing_query.single_mut();
-    post_processing.aberration = match any_shooting {
+    let final_phase = countdown.timer.elapsed() >= Duration::from_secs_f32(16.0);
+    post_processing.aberration = match shooters > 0 {
+        true => match final_phase && shooters >= 3 {
+            true => HIGH_CHROMATIC_ABERRATION,
+            false => MEDIUM_CHROMATIC_ABERRATION,
+        },
         false => LOW_CHROMATIC_ABERRATION,
-        true => HIGH_CHROMATIC_ABERRATION,
     };
 }
