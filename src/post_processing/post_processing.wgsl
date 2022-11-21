@@ -28,8 +28,8 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4<f32> {
     );
 
     // vignette
-    let centricity = min((uv.x * (1.0 - uv.x) * uv.y * (1.0 - uv.y) * 15.0), 1.0);
-    let intensity = 0.15 + 0.85 * pow(centricity, 0.5);
+    let centricity = min((uv.x * (1.0 - uv.x) * uv.y * (1.0 - uv.y) * 25.0), 1.0);
+    let intensity = 0.05 + 0.95 * pow(centricity, 0.2);
     let vignette_output = aberration_output * intensity;
 
     return vec4<f32>(vignette_output, 1.0);
