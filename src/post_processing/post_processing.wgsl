@@ -2,6 +2,9 @@
 
 struct Params {
     aberration: f32,
+    wasm_padding_1: f32,
+    wasm_padding_2: f32,
+    wasm_padding_3: f32,
 };
 
 @group(0) @binding(0)
