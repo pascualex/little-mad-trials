@@ -102,7 +102,7 @@ fn setup(
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(4.0, 2.25)))),
             material: materials.add(StandardMaterial {
-                ..material_from_color(palette::LIGHT_WHITE * 1.65)
+                ..material_from_color(palette::LIGHT_WHITE * 1.5)
             }),
             transform: Transform::from_xyz(0.0, 4.0, -6.94),
             ..default()

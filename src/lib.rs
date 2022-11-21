@@ -64,19 +64,22 @@ fn setup(mut commands: Commands) {
         PostProcessing::new(LOW_CHROMATIC_ABERRATION),
     ));
     #[cfg(not(target_arch = "wasm32"))]
-    camera.insert(BloomSettings::default());
+    camera.insert(BloomSettings {
+        threshold: 1.2,
+        ..default()
+    });
     for i in [-6.0, 4.0] {
         for j in [-6.0, 4.0] {
             commands.spawn(DirectionalLightBundle {
                 transform: Transform::from_translation(Vec3::ZERO)
                     .looking_at(Vec3::new(j, -6.0, i), Vec3::Y),
                 directional_light: DirectionalLight {
-                    illuminance: (i.abs() + j.abs()) * 1100.0,
+                    illuminance: ((i.abs() - 3.0) * 2.0 + (8.0 - j.abs()) * 1.5) * 1500.0,
                     shadows_enabled: true,
                     shadow_projection: OrthographicProjection {
                         left: -SHADOW_SIZE,
                         right: SHADOW_SIZE,
-                        bottom: -SHADOW_SIZE,
+                        bottom: -SHADOW_SIZE * 1.5,
                         top: SHADOW_SIZE,
                         near: -SHADOW_SIZE,
                         far: SHADOW_SIZE,
