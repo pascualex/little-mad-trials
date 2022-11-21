@@ -24,9 +24,9 @@ fn setup(
 ) {
     commands.spawn((
         MaterialMeshBundle {
-            mesh: meshes.add(Mesh::from(Fog::new(40.0, 100))),
-            material: materials.add(FogMaterial::new(Color::rgba_u8(138, 88, 126, 230))),
-            transform: Transform::from_xyz(0.0, -3.5, 10.0),
+            mesh: meshes.add(Mesh::from(Fog::new(50.0, 100))),
+            material: materials.add(FogMaterial::new(Color::rgba_u8(138, 88, 126, 80) * 1.7)),
+            transform: Transform::from_xyz(0.0, -3.5, 0.0),
             ..default()
         },
         NotShadowCaster,

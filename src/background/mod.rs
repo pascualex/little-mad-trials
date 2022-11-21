@@ -12,7 +12,7 @@ use crate::{material_from_color, palette, AppState};
 
 use self::{fog::FogPlugin, screen::ScreenPlugin};
 
-const WALLS_COLOR: Color = palette::LIGHT_WHITE;
+const WALLS_COLOR: Color = palette::DARK_BLACK;
 
 pub struct BackgroundPlugin;
 
@@ -56,8 +56,10 @@ fn setup(
     commands.spawn((
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(1000.0, 1000.0)))),
-            material: materials.add(material_from_color(WALLS_COLOR)),
-            transform: Transform::from_xyz(0.0, 0.0, -10.0),
+            material: materials.add(StandardMaterial {
+                ..material_from_color(WALLS_COLOR)
+            }),
+            transform: Transform::from_xyz(0.0, 0.0, -25.0),
             ..default()
         },
         NotShadowCaster,
@@ -67,7 +69,7 @@ fn setup(
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(1000.0, 1000.0)))),
             material: materials.add(material_from_color(WALLS_COLOR * 0.9)),
-            transform: Transform::from_xyz(-20.0, 0.0, 0.0)
+            transform: Transform::from_xyz(-18.0, 0.0, 0.0)
                 .with_rotation(Quat::from_rotation_y(PI / 2.0)),
             ..default()
         },
@@ -79,7 +81,7 @@ fn setup(
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(1000.0, 1000.0)))),
             material: materials.add(material_from_color(WALLS_COLOR * 0.9)),
-            transform: Transform::from_xyz(20.0, 0.0, 0.0)
+            transform: Transform::from_xyz(18.0, 0.0, 0.0)
                 .with_rotation(Quat::from_rotation_y(-PI / 2.0)),
             ..default()
         },
@@ -90,7 +92,7 @@ fn setup(
     commands.spawn((
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(1000.0, 1000.0)))),
-            material: materials.add(material_from_color(palette::DARK_BLACK)),
+            material: materials.add(material_from_color(WALLS_COLOR * 0.8)),
             transform: Transform::from_xyz(0.0, -15.0, 0.0)
                 .with_rotation(Quat::from_rotation_x(-PI / 2.0)),
             ..default()

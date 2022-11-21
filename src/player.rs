@@ -92,7 +92,7 @@ fn enter_defeat(
 ) {
     let player = player_query.single();
     let mut handle = material_query.get_mut(player.model).unwrap();
-    *handle = materials.add(material_from_color(PLAYER_DEAD_COLOR));
+    *handle = materials.add(material_from_color(PLAYER_DEAD_COLOR * 0.5));
 }
 
 fn enter_teardown(mut query: Query<(&Position, &mut Phases<BoardMode>), With<Player>>) {

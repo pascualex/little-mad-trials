@@ -83,7 +83,7 @@ pub fn ray_blueprint(
                 ..default()
             })),
             material: materials.add(StandardMaterial {
-                emissive: Color::rgb(1.0, 0.02, 0.03) * 5.0,
+                emissive: Color::rgb(1.0, 0.02, 0.03) * 3.5,
                 ..material_from_color(Color::rgb(1.0, 0.1, 0.12))
             }),
             transform: Transform::from_rotation(Quat::from_rotation_x(PI / 2.0)),

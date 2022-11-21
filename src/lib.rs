@@ -50,6 +50,7 @@ pub enum AppState {
 }
 
 fn setup(mut commands: Commands) {
+    // camera
     let mut camera = commands.spawn((
         Camera3dBundle {
             camera: Camera {
@@ -65,7 +66,13 @@ fn setup(mut commands: Commands) {
     ));
     #[cfg(not(target_arch = "wasm32"))]
     camera.insert(BloomSettings {
-        threshold: 1.2,
+        intensity: 0.25,
+        threshold: 1.0,
+        ..default()
+    });
+    // lights
+    commands.insert_resource(AmbientLight {
+        brightness: 0.1,
         ..default()
     });
     for i in [-6.0, 4.0] {

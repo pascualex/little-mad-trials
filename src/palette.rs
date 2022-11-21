@@ -15,7 +15,8 @@ pub const LIGHT_RED: Color = Color::rgb(0.996, 0.461, 0.457); // #ff7675
 pub const LIGHT_WHITE: Color = Color::rgb(0.871, 0.898, 0.910); // #dfe6e9
 pub const LIGHT_YELLOW: Color = Color::rgb(0.996, 0.914, 0.652); // #ffeaa7
 
-pub const DARK_BLACK: Color = Color::rgb(0.176, 0.203, 0.211); // #2d3436
+// pub const DARK_BLACK: Color = Color::rgb(0.176, 0.203, 0.211); // #2d3436
+pub const DARK_BLACK: Color = Color::rgb(0.176, 0.203, 0.241);
 pub const DARK_BLUE: Color = Color::rgb(0.035, 0.516, 0.887); // #0984e3
 pub const DARK_CYAN: Color = Color::rgb(0.000, 0.805, 0.785); // #00cec9
 pub const DARK_GREEN: Color = Color::rgb(0.000, 0.719, 0.578); // #00b894
