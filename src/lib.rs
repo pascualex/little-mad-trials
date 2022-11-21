@@ -30,6 +30,7 @@ impl Plugin for AppPlugin {
             .add_plugin(PlayerPlugin)
             .add_plugin(LaserPlugin)
             .add_plugin(PostProcessingPlugin)
+            .insert_resource(Msaa { samples: 1 })
             .add_startup_system(setup)
             .add_system_set(SystemSet::on_update(AppState::Splash).with_system(start))
             .add_system_set(SystemSet::on_update(AppState::Defeat).with_system(restart))
@@ -49,7 +50,7 @@ pub enum AppState {
 }
 
 fn setup(mut commands: Commands) {
-    commands.spawn((
+    let mut camera = commands.spawn((
         Camera3dBundle {
             camera: Camera {
                 hdr: true,
@@ -60,9 +61,10 @@ fn setup(mut commands: Commands) {
         },
         UiCameraConfig { show_ui: false },
         Fxaa::default(),
-        BloomSettings::default(),
         PostProcessing::new(LOW_CHROMATIC_ABERRATION),
     ));
+    #[cfg(not(target_arch = "wasm32"))]
+    camera.insert(BloomSettings::default());
     for i in [-6.0, 4.0] {
         for j in [-6.0, 4.0] {
             commands.spawn(DirectionalLightBundle {

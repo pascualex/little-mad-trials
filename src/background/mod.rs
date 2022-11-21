@@ -12,7 +12,7 @@ use crate::{material_from_color, palette, AppState};
 
 use self::{fog::FogPlugin, screen::ScreenPlugin};
 
-const WALLS_COLOR: Color = palette::DARK_WHITE;
+const WALLS_COLOR: Color = palette::LIGHT_WHITE;
 
 pub struct BackgroundPlugin;
 

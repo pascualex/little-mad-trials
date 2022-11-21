@@ -97,12 +97,18 @@ impl ExtractComponent for PostProcessing {
 #[derive(ShaderType)]
 struct PostProcessingParams {
     aberration: f32,
+    wasm_padding_1: f32,
+    wasm_padding_2: f32,
+    wasm_padding_3: f32,
 }
 
 impl From<&PostProcessing> for PostProcessingParams {
     fn from(post_processing: &PostProcessing) -> Self {
         Self {
             aberration: post_processing.aberration,
+            wasm_padding_1: 0.0,
+            wasm_padding_2: 0.0,
+            wasm_padding_3: 0.0,
         }
     }
 }

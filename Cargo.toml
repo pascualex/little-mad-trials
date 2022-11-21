@@ -11,4 +11,5 @@ opt-level = 3
 
 [dependencies]
 bevy = { path = "../bevy" }
-fastrand = "1.8.0"
+fastrand = "1.8"
+console_error_panic_hook = "0.1"
