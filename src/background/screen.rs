@@ -83,8 +83,8 @@ fn setup(
     commands.spawn((
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Box::new(4.25, 2.50, 0.1))),
-            material: materials.add(material_from_color(palette::DARK_BLACK)),
-            transform: Transform::from_xyz(0.0, 4.0, -7.0),
+            material: materials.add(material_from_color(palette::DARK_BLACK * 0.85)),
+            transform: Transform::from_xyz(0.0, 3.75, -6.0),
             ..default()
         },
         NotShadowReceiver,
@@ -92,8 +92,8 @@ fn setup(
     commands.spawn((
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Box::new(0.5, 40.0, 0.1))),
-            material: materials.add(material_from_color(palette::DARK_BLACK)),
-            transform: Transform::from_xyz(0.0, 22.75, -7.2),
+            material: materials.add(material_from_color(palette::DARK_BLACK * 0.85)),
+            transform: Transform::from_xyz(0.0, 22.5, -6.2),
             ..default()
         },
         NotShadowReceiver,
@@ -102,9 +102,9 @@ fn setup(
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(4.0, 2.25)))),
             material: materials.add(StandardMaterial {
-                ..material_from_color(palette::LIGHT_WHITE * 1.5)
+                ..material_from_color(palette::LIGHT_WHITE * 1.22)
             }),
-            transform: Transform::from_xyz(0.0, 4.0, -6.94),
+            transform: Transform::from_xyz(0.0, 3.75, -5.94),
             ..default()
         },
         NotShadowReceiver,
@@ -117,7 +117,7 @@ fn setup(
                 alpha_mode: AlphaMode::Blend,
                 ..material_from_color(Color::WHITE)
             }),
-            transform: Transform::from_xyz(0.0, 4.0, -6.93),
+            transform: Transform::from_xyz(0.0, 3.75, -5.93),
             ..default()
         },
         NotShadowReceiver,
