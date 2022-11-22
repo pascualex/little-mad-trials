@@ -26,7 +26,7 @@ fn setup(
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(Fog::new(50.0, 100))),
             material: materials.add(FogMaterial::new(Color::rgba_u8(138, 88, 126, 80) * 1.7)),
-            transform: Transform::from_xyz(0.0, -3.5, 0.0),
+            transform: Transform::from_xyz(0.0, -4.0, 0.0),
             ..default()
         },
         NotShadowCaster,
@@ -92,18 +92,19 @@ impl From<Fog> for Mesh {
             }
         }
 
-        let cells = (fog.num_vertices - 1) * (fog.num_vertices - 1);
-
         let mut indices = Vec::new();
-        for i in 0..cells {
-            // top left triangle
-            indices.push(i);
-            indices.push(i + fog.num_vertices);
-            indices.push(i + fog.num_vertices + 1);
-            // bottom right triangle
-            indices.push(i);
-            indices.push(i + fog.num_vertices + 1);
-            indices.push(i + 1);
+        for i in 0..(fog.num_vertices - 1) {
+            for j in 0..(fog.num_vertices - 1) {
+                let idx = i * fog.num_vertices + j;
+                // top left triangle
+                indices.push(idx);
+                indices.push(idx + fog.num_vertices);
+                indices.push(idx + fog.num_vertices + 1);
+                // bottom right triangle
+                indices.push(idx);
+                indices.push(idx + fog.num_vertices + 1);
+                indices.push(idx + 1);
+            }
         }
 
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
