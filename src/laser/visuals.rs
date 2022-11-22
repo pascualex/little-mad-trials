@@ -32,7 +32,7 @@ pub fn turrets_blueprint(
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<StandardMaterial>,
 ) -> Entity {
-    let root = (TransformBundle::default(), VisibilityBundle::default());
+    let root = SpatialBundle::default();
     let top = MaterialMeshBundle {
         mesh: meshes.add(Mesh::from(shape::Box::new(0.3, 0.3, 0.6))),
         material: materials.add(material_from_color(color)),
@@ -45,18 +45,18 @@ pub fn turrets_blueprint(
         transform: Transform::from_xyz(0.0, 0.0, -2.0),
         ..default()
     };
-    let top_rail = (MaterialMeshBundle {
+    let top_rail = MaterialMeshBundle {
         mesh: meshes.add(Mesh::from(shape::Box::new(0.6, 0.15, 0.3))),
         material: materials.add(material_from_color(color)),
         transform: Transform::from_xyz(0.0, 0.0, 2.0),
         ..default()
-    },);
-    let bottom_rail = (MaterialMeshBundle {
+    };
+    let bottom_rail = MaterialMeshBundle {
         mesh: meshes.add(Mesh::from(shape::Box::new(0.6, 0.15, 0.3))),
         material: materials.add(material_from_color(color)),
         transform: Transform::from_xyz(0.0, 0.0, -2.0),
         ..default()
-    },);
+    };
     commands
         .spawn(root)
         .with_children(|builder| {
@@ -87,7 +87,6 @@ pub fn ray_blueprint(
                 ..material_from_color(Color::rgb(1.0, 0.1, 0.12))
             }),
             transform: Transform::from_rotation(Quat::from_rotation_x(PI / 2.0)),
-            visibility: Visibility { is_visible: false },
             ..default()
         },
         NotShadowCaster,

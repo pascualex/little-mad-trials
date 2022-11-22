@@ -53,8 +53,7 @@ fn setup(
         })
         .id();
     let root = (
-        TransformBundle::from_transform(Transform::from_xyz(0.0, HIDDEN_HEIGHT, 0.0)),
-        VisibilityBundle::default(),
+        SpatialBundle::from_transform(Transform::from_xyz(0.0, HIDDEN_HEIGHT, 0.0)),
         Position::from_xy(0, 0),
         Player::new(model),
         Phases::new(BoardMode::Hidden),
