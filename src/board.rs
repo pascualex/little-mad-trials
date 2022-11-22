@@ -37,12 +37,11 @@ fn setup(
     for i in -1..=1 {
         for j in -1..=1 {
             let root = (
-                TransformBundle::from_transform(Transform::from_xyz(
+                SpatialBundle::from_transform(Transform::from_xyz(
                     j as f32,
                     HIDDEN_HEIGHT,
                     -i as f32,
                 )),
-                VisibilityBundle::default(),
                 Tile,
                 Phases::new(BoardMode::Hidden),
             );

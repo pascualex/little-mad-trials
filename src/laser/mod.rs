@@ -104,15 +104,11 @@ fn laser(
     );
     let charging = turrets_blueprint(mobile, commands, palette::DARK_RED, meshes, materials);
     let ray = ray_blueprint(commands, meshes, materials);
-    let model = (
-        TransformBundle::from_transform(
-            Transform::from_xyz(0.0, 0.3, 0.0).with_rotation(Quat::from_rotation_y(rotation)),
-        ),
-        VisibilityBundle::default(),
+    let model = SpatialBundle::from_transform(
+        Transform::from_xyz(0.0, 0.3, 0.0).with_rotation(Quat::from_rotation_y(rotation)),
     );
     let root = (
-        TransformBundle::from_transform(Transform::from_xyz(0.0, HIDDEN_HEIGHT, 0.0)),
-        VisibilityBundle::default(),
+        SpatialBundle::from_transform(Transform::from_xyz(0.0, HIDDEN_HEIGHT, 0.0)),
         Position::new(position),
         Laser::new(axis, mobile),
         Visuals::new(normal, fast, charging, ray),
