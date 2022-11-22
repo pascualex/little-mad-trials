@@ -3,7 +3,7 @@
 ## Hosting WASM locally
 
 ```
-cargo run --target wasm32-unknown-unknown
+cargo run --release --target wasm32-unknown-unknown
 ```
 
 ## Building WASM

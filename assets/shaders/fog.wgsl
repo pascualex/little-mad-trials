@@ -76,10 +76,6 @@ fn noise(position: vec2<f32>) -> f32 {
 
 // structs
 
-struct FogMaterial {
-    color: vec4<f32>,
-};
-
 struct Vertex {
     @location(0) position: vec3<f32>,
 };
@@ -88,11 +84,6 @@ struct Fragment {
     @builtin(position) clip_position: vec4<f32>,
     @location(0) position_2d: vec2<f32>,
 };
-
-// bind group
-
-@group(1) @binding(0)
-var<uniform> material: FogMaterial;
 
 // vertex
 
