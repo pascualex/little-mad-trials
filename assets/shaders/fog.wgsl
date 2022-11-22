@@ -111,13 +111,11 @@ fn vertex(in: Vertex) -> Fragment {
 
 // fragment
 
-// let color_1 = vec3<f32>(0.15, 0.35, 0.35);
-// let color_2 = vec3<f32>(0.0, 0.0, 0.0);
-let color_1 = vec3<f32>(0.35, 0.15, 0.25);
-let color_2 = vec3<f32>(0.0, 0.0, 0.0);
+let color_1 = vec3<f32>(1.15, 1.35, 1.65);
+let color_2 = vec3<f32>(0.10, 0.20, 0.30);
 
 @fragment
 fn fragment(in: Fragment) -> @location(0) vec4<f32> {
     let noise = noise(in.position_2d);
-    return vec4<f32>(mix(color_2, color_1, noise), 0.99);
+    return vec4<f32>(mix(color_2, color_1, noise) * 1.3, 0.75);
 }

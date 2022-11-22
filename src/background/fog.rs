@@ -8,6 +8,8 @@ use bevy::{
     },
 };
 
+use crate::board::HIDDEN_HEIGHT;
+
 pub struct FogPlugin;
 
 impl Plugin for FogPlugin {
@@ -25,8 +27,8 @@ fn setup(
     commands.spawn((
         MaterialMeshBundle {
             mesh: meshes.add(Mesh::from(Fog::new(50.0, 100))),
-            material: materials.add(FogMaterial::new(Color::rgba_u8(138, 88, 126, 80) * 1.7)),
-            transform: Transform::from_xyz(0.0, -4.0, 0.0),
+            material: materials.add(FogMaterial::new()),
+            transform: Transform::from_xyz(0.0, HIDDEN_HEIGHT + 1.0, 0.0),
             ..default()
         },
         NotShadowCaster,
@@ -36,14 +38,11 @@ fn setup(
 
 #[derive(Clone, AsBindGroup, TypeUuid, Debug)]
 #[uuid = "fec7aad3-dd4b-43d6-be0b-a56cf4349038"]
-struct FogMaterial {
-    #[uniform(0)]
-    color: Color,
-}
+struct FogMaterial {}
 
 impl FogMaterial {
-    fn new(color: Color) -> Self {
-        Self { color }
+    fn new() -> Self {
+        Self {}
     }
 }
 
