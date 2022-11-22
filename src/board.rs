@@ -6,7 +6,8 @@ use crate::{
     AppState,
 };
 
-pub const HIDDEN_HEIGHT: f32 = -5.0;
+pub const SHOWN_HEIGHT: f32 = 0.0;
+pub const HIDDEN_HEIGHT: f32 = -7.0;
 
 pub struct BoardPlugin;
 
@@ -121,11 +122,13 @@ fn to_world_y(mut query: Query<(&mut Transform, &Phases<BoardMode>)>) {
         let old_y = transform.translation.y;
         transform.translation.y = match phases.mode() {
             BoardMode::Hidden => HIDDEN_HEIGHT,
-            BoardMode::Entering => HIDDEN_HEIGHT * (1.0 - ease(phases.progress)),
-            BoardMode::Shown => 0.0,
+            BoardMode::Entering => {
+                HIDDEN_HEIGHT + (SHOWN_HEIGHT - HIDDEN_HEIGHT) * ease(phases.progress)
+            }
+            BoardMode::Shown => SHOWN_HEIGHT,
             BoardMode::Exiting => {
-                let new_y = HIDDEN_HEIGHT * ease(phases.progress);
-                let both_above = old_y >= 0.0 && new_y >= 0.0;
+                let new_y = SHOWN_HEIGHT + (HIDDEN_HEIGHT - SHOWN_HEIGHT) * ease(phases.progress);
+                let both_above = old_y >= SHOWN_HEIGHT && new_y >= SHOWN_HEIGHT;
                 let both_bellow = old_y <= HIDDEN_HEIGHT && new_y <= HIDDEN_HEIGHT;
                 match both_above || both_bellow {
                     true => new_y,
