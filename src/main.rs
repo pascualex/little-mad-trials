@@ -10,10 +10,7 @@ fn main() {
     console_error_panic_hook::set_once();
 
     App::new()
-        .add_plugins(DefaultPlugins.set(AssetPlugin {
-            watch_for_changes: true,
-            ..default()
-        }))
+        .add_plugins(DefaultPlugins)
         .add_plugin(FrameTimeDiagnosticsPlugin)
         .add_plugin(EntityCountDiagnosticsPlugin)
         .add_plugin(AppPlugin)
