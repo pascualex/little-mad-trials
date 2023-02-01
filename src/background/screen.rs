@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use bevy::{
     core_pipeline::clear_color::ClearColorConfig,
-    pbr::NotShadowReceiver,
+    pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
     render::{
         camera::RenderTarget,
@@ -88,6 +88,7 @@ fn setup(
             transform: Transform::from_xyz(0.0, 3.75, -6.0),
             ..default()
         },
+        NotShadowCaster,
         NotShadowReceiver,
     ));
     commands.spawn((
@@ -97,6 +98,7 @@ fn setup(
             transform: Transform::from_xyz(0.0, 22.5, -6.2),
             ..default()
         },
+        NotShadowCaster,
         NotShadowReceiver,
     ));
     commands.spawn((
@@ -108,6 +110,7 @@ fn setup(
             transform: Transform::from_xyz(0.0, 3.75, -5.94),
             ..default()
         },
+        NotShadowCaster,
         NotShadowReceiver,
     ));
     commands.spawn((
@@ -121,6 +124,7 @@ fn setup(
             transform: Transform::from_xyz(0.0, 3.75, -5.93),
             ..default()
         },
+        NotShadowCaster,
         NotShadowReceiver,
     ));
 }
