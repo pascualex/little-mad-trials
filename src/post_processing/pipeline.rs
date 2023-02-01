@@ -99,14 +99,14 @@ pub struct CameraPostProcessingPipeline {
 
 pub fn prepare_post_processing_pipelines(
     mut commands: Commands,
-    mut pipeline_cache: ResMut<PipelineCache>,
+    pipeline_cache: ResMut<PipelineCache>,
     mut pipelines: ResMut<SpecializedRenderPipelines<PostProcessingPipeline>>,
     post_processing_pipeline: Res<PostProcessingPipeline>,
     views: Query<(Entity, &ExtractedView), With<PostProcessing>>,
 ) {
     for (entity, view) in &views {
         let pipeline_id = pipelines.specialize(
-            &mut pipeline_cache,
+            &pipeline_cache,
             &post_processing_pipeline,
             PostProcessingPipelineKey {
                 texture_format: if view.hdr {

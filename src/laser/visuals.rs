@@ -121,11 +121,20 @@ fn charge(
     for (laser, phases, models) in &laser_query {
         let charging = matches!(phases.mode(), LaserMode::Charging | LaserMode::Attacking);
         let mut normal_visibility = visibility_query.get_mut(models.normal).unwrap();
-        normal_visibility.is_visible = !charging && !laser.fast;
+        *normal_visibility = match !charging && !laser.fast {
+            true => Visibility::Inherited,
+            false => Visibility::Hidden,
+        };
         let mut fast_visibility = visibility_query.get_mut(models.fast).unwrap();
-        fast_visibility.is_visible = !charging && laser.fast;
+        *fast_visibility = match !charging && laser.fast {
+            true => Visibility::Inherited,
+            false => Visibility::Hidden,
+        };
         let mut charging_visibility = visibility_query.get_mut(models.charging).unwrap();
-        charging_visibility.is_visible = charging;
+        *charging_visibility = match charging {
+            true => Visibility::Inherited,
+            false => Visibility::Hidden,
+        };
     }
 }
 
@@ -139,7 +148,10 @@ fn attack(
     for (phases, visuals) in &laser_query {
         let shooting = matches!(phases.mode(), LaserMode::Attacking);
         let mut visibility = visibility_query.get_mut(visuals.ray).unwrap();
-        visibility.is_visible = shooting;
+        *visibility = match shooting {
+            true => Visibility::Inherited,
+            false => Visibility::Hidden,
+        };
         shooters += shooting as i32;
     }
     let mut post_processing = post_processing_query.single_mut();

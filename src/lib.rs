@@ -15,7 +15,6 @@ use post_processing::{PostProcessing, PostProcessingPlugin};
 
 use self::{board::BoardPlugin, laser::LaserPlugin, player::PlayerPlugin};
 
-const SHADOW_SIZE: f32 = 11.0;
 const LOW_CHROMATIC_ABERRATION: f32 = 0.0;
 const MEDIUM_CHROMATIC_ABERRATION: f32 = 0.001;
 const HIGH_CHROMATIC_ABERRATION: f32 = 0.003;
@@ -30,7 +29,7 @@ impl Plugin for AppPlugin {
             .add_plugin(PlayerPlugin)
             .add_plugin(LaserPlugin)
             .add_plugin(PostProcessingPlugin)
-            .insert_resource(Msaa { samples: 1 })
+            .insert_resource(Msaa::Sample4)
             .add_startup_system(setup)
             .add_system_set(SystemSet::on_update(AppState::Splash).with_system(start))
             .add_system_set(SystemSet::on_update(AppState::Defeat).with_system(restart))
@@ -83,15 +82,6 @@ fn setup(mut commands: Commands) {
                 directional_light: DirectionalLight {
                     illuminance: ((i.abs() - 3.0) * 2.0 + (8.0 - j.abs()) * 1.5) * 1500.0,
                     shadows_enabled: true,
-                    shadow_projection: OrthographicProjection {
-                        left: -SHADOW_SIZE,
-                        right: SHADOW_SIZE,
-                        bottom: -SHADOW_SIZE * 1.5,
-                        top: SHADOW_SIZE,
-                        near: -SHADOW_SIZE,
-                        far: SHADOW_SIZE,
-                        ..default()
-                    },
                     ..default()
                 },
                 ..default()

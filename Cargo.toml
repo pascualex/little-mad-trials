@@ -10,6 +10,6 @@ opt-level = 1
 opt-level = 3
 
 [dependencies]
-bevy = { path = "../bevy" }
+bevy = { git = "https://github.com/bevyengine/bevy", rev = "69fc8c6" }
 fastrand = "1.8"
 console_error_panic_hook = "0.1"

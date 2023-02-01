@@ -60,6 +60,7 @@ fn setup(
             usage: TextureUsages::TEXTURE_BINDING
                 | TextureUsages::COPY_DST
                 | TextureUsages::RENDER_ATTACHMENT,
+            view_formats: &[],
         },
         ..default()
     };
@@ -73,7 +74,7 @@ fn setup(
         },
         camera: Camera {
             target: RenderTarget::Image(handle.clone()),
-            priority: -1,
+            order: -1,
             ..default()
         },
         ..default()
@@ -164,7 +165,8 @@ fn screen_ui(commands: &mut Commands, asset_server: &AssetServer) {
                         color: Color::BLACK,
                     },
                 )],
-                alignment: TextAlignment::CENTER,
+                alignment: TextAlignment::Center,
+                ..default()
             },
             style: Style {
                 margin: UiRect::all(Val::Auto),

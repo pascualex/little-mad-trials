@@ -71,7 +71,7 @@ impl Node for PostProcessingNode {
         let source = post_process.source;
         let destination = post_process.destination;
 
-        let device = &render_context.render_device;
+        let device = &render_context.render_device();
         let sampler = device.create_sampler(&SamplerDescriptor {
             mipmap_filter: FilterMode::Linear,
             mag_filter: FilterMode::Linear,
@@ -112,7 +112,7 @@ impl Node for PostProcessingNode {
         };
 
         let mut render_pass = render_context
-            .command_encoder
+            .command_encoder()
             .begin_render_pass(&pass_descriptor);
 
         render_pass.set_pipeline(pipeline);
